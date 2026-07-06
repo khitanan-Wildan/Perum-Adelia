@@ -19,6 +19,14 @@
 <script type="text/babel"> 
 const { useState, useEffect, useMemo, useRef } = React;
 
+// ==========================================
+// PENGATURAN AKUN ADMIN (Silakan ubah di sini)
+// ==========================================
+const ADMIN_ACCOUNTS = [
+    { username: 'Iman', password: '071018' },
+    { username: 'Gangan', password: '111213' }
+];
+
 // 1. KONFIGURASI FIREBASE ANDA
 const firebaseConfig = {
   apiKey: "AIzaSyDAf69gpgH3I9pPUMXbuLBvPx-ig-pXuvI",
@@ -48,6 +56,11 @@ const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Ju
 const AVAILABLE_YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
 
 function App() { 
+    // --- STATE LOGIN ADMIN ---
+    const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdminAdelia') === 'true');
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [loginError, setLoginError] = useState('');
+
     const [activeTab, setActiveTab] = useState('home'); 
     const [activeMonth, setActiveMonth] = useState(new Date().getMonth()); 
     const [activeYear, setActiveYear] = useState(new Date().getFullYear()); 
@@ -75,6 +88,31 @@ function App() {
         const dd = String(today.getDate()).padStart(2, '0');
         return `${yyyy}-${mm}-${dd}`;
     }, []);
+
+    // --- FUNGSI LOGIN / LOGOUT ---
+    const handleLogin = (e) => {
+        e.preventDefault();
+        const u = e.target.username.value;
+        const p = e.target.password.value;
+        
+        const isValid = ADMIN_ACCOUNTS.some(acc => acc.username === u && acc.password === p);
+        
+        if (isValid) {
+            setIsAdmin(true);
+            localStorage.setItem('isAdminAdelia', 'true');
+            setShowLoginModal(false);
+            setLoginError('');
+        } else {
+            setLoginError('Username atau password salah!');
+        }
+    };
+
+    const handleLogout = () => {
+        if(window.confirm("Yakin ingin keluar dari mode Admin?")) {
+            setIsAdmin(false);
+            localStorage.removeItem('isAdminAdelia');
+        }
+    };
 
     // 3. EFEK SINKRONISASI REAL-TIME DENGAN FIREBASE
     useEffect(() => { 
@@ -153,6 +191,7 @@ function App() {
     }, [citizens, transactions, activeMonth, activeYear]);
 
     const handlePayDues = (method) => { 
+        if(!isAdmin) return;
         const c = showPayModal.citizen; 
         const newId = Date.now();
         const newT = { 
@@ -166,7 +205,7 @@ function App() {
             citizenId: c.id, 
             isDues: true,
             duesMonth: activeMonth, 
-            duesYear: activeYear    
+            duesYear: activeYear   
         }; 
         
         database.ref('transactions/' + newId).set(newT);
@@ -175,6 +214,7 @@ function App() {
 
     const handleSaveTransaction = (e) => { 
         e.preventDefault(); 
+        if(!isAdmin) return;
         const form = e.target; 
         const [y, m, d] = form.date.value.split('-');
         
@@ -202,6 +242,7 @@ function App() {
     };
 
     const handleEditCitizen = (citizen) => {
+        if(!isAdmin) return;
         const newName = prompt("Ubah Nama Warga:", citizen.name);
         if (newName === null) return; 
         
@@ -226,18 +267,21 @@ function App() {
     };
 
     const handleDeleteCitizen = (id) => {
+        if(!isAdmin) return;
         if(window.confirm("Apakah Anda yakin ingin menghapus data warga ini?")) {
             database.ref('citizens/' + id).remove();
         }
     };
 
     const handleDeleteTransaction = (id) => {
+        if(!isAdmin) return;
         if(window.confirm("Apakah Anda yakin ingin menghapus riwayat transaksi ini?")) {
             database.ref('transactions/' + id).remove();
         }
     };
 
     const handleAddCitizen = () => {
+        if(!isAdmin) return;
         const name = prompt("Nama Warga"); 
         const block = prompt("Blok"); 
         if(name && block) {
@@ -252,6 +296,7 @@ function App() {
 
     // FITUR PENGIRIMAN KE GOOGLE SHEETS
     const handleSyncToSheets = () => {
+        if(!isAdmin) return;
         if(!window.confirm("Kirim seluruh data riwayat transaksi ini ke Google Sheets? (Data di file Sheets akan diperbarui)")) return;
         
         setIsSyncing(true);
@@ -267,7 +312,7 @@ function App() {
 
         fetch(GOOGLE_SHEET_URL, {
             method: 'POST',
-            mode: 'no-cors', // Mencegah blokir keamanan (CORS) dari Google
+            mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(dataToSend)
         })
@@ -317,13 +362,30 @@ function App() {
 
 
     return ( 
-        <div className="max-w-md mx-auto h-screen flex flex-col bg-gray-50 shadow-xl border-x border-gray-200"> 
+        <div className="max-w-md mx-auto h-screen flex flex-col bg-gray-50 shadow-xl border-x border-gray-200 relative"> 
+            
+            {/* Indikator Mode Admin */}
+            {isAdmin && (
+                <div className="bg-emerald-500 text-white text-[8px] text-center py-0.5 font-bold uppercase tracking-wider">
+                    🛠️ Mode Admin Aktif - Akses Penuh
+                </div>
+            )}
+
             <header className="bg-blue-800 text-white p-3 shadow-md flex-none flex justify-between items-center sticky top-0 z-50"> 
-                <h1 className="text-xs font-bold tracking-wider truncate">PERUMAHAN ADELIA</h1> 
-                <span className="text-[10px] bg-blue-700 px-2 py-0.5 rounded font-mono">
-                    <span className="inline-block w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5 animate-pulse"></span>
-                    {MONTH_NAMES[activeMonth].substring(0,3)} {activeYear}
-                </span>
+                <h1 className="text-xs font-bold tracking-wider truncate">PERUM. ADELIA</h1> 
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] bg-blue-700 px-2 py-0.5 rounded font-mono flex items-center">
+                        <span className="inline-block w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5 animate-pulse"></span>
+                        {MONTH_NAMES[activeMonth].substring(0,3)} {activeYear}
+                    </span>
+                    
+                    {/* Tombol Login / Logout */}
+                    {isAdmin ? (
+                        <button onClick={handleLogout} className="text-[10px] bg-red-500 hover:bg-red-600 px-2 py-1 rounded shadow-sm">Logout</button>
+                    ) : (
+                        <button onClick={() => setShowLoginModal(true)} className="text-[10px] bg-blue-600 hover:bg-blue-500 border border-blue-400 px-2 py-1 rounded shadow-sm">Login</button>
+                    )}
+                </div>
             </header>
 
             <main className="flex-1 p-2.5 pb-16 overflow-y-auto"> 
@@ -394,6 +456,42 @@ function App() {
                                 ))} 
                             </div> 
                         </div>
+
+                        {/* TABEL TAMBAHAN UNTUK MENGISI RUANG KOSONG */}
+                        <div className="bg-white rounded-xl border shadow-sm overflow-hidden mt-1">
+                            <div className="bg-gray-50 px-2.5 py-2 border-b flex justify-between items-center">
+                                <h3 className="text-[10px] font-bold text-gray-700 uppercase">Riwayat Terakhir</h3>
+                                <button onClick={() => setActiveTab('kas')} className="text-[9px] text-blue-600 font-bold hover:underline">Lihat Semua</button>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-white text-[8px] uppercase text-gray-400 border-b">
+                                            <th className="px-2.5 py-1.5 font-bold">Tanggal</th>
+                                            <th className="px-2.5 py-1.5 font-bold">Keterangan</th>
+                                            <th className="px-2.5 py-1.5 font-bold text-right">Nominal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {transactions.slice(0, 5).map(t => (
+                                            <tr key={t.id} className="border-b last:border-b-0 hover:bg-gray-50">
+                                                <td className="px-2.5 py-2 text-[9px] whitespace-nowrap text-gray-500">{t.date.split('T')[0]}</td>
+                                                <td className="px-2.5 py-2 text-[9px] text-gray-800 truncate max-w-[120px]">{t.ket}</td>
+                                                <td className={`px-2.5 py-2 text-[9px] font-bold text-right whitespace-nowrap ${t.type === 'masuk' ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.nominal)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {transactions.length === 0 && (
+                                            <tr>
+                                                <td colSpan="3" className="px-2.5 py-4 text-center text-xs text-gray-400">Belum ada transaksi</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div> 
                 )}
 
@@ -404,7 +502,11 @@ function App() {
                             <span className="font-bold text-xs flex-1 text-center text-gray-700">{MONTH_NAMES[activeMonth]} {activeYear}</span> 
                             <button onClick={() => { setActiveMonth(activeMonth === 11 ? 0 : activeMonth + 1); if(activeMonth === 11) setActiveYear(activeYear + 1); }} className="p-1 hover:bg-gray-100 rounded-lg text-xs font-bold">&gt;</button> 
                         </div> 
-                        <button onClick={handleAddCitizen} className="w-full p-2 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-sm hover:bg-blue-700">+ Tambah Warga Baru</button> 
+                        
+                        {/* HANYA ADMIN YANG BISA NAMBAH WARGA */}
+                        {isAdmin && (
+                            <button onClick={handleAddCitizen} className="w-full p-2 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-sm hover:bg-blue-700">+ Tambah Warga Baru</button> 
+                        )}
                         
                         <div className="flex gap-2">
                             <input 
@@ -412,12 +514,12 @@ function App() {
                                 placeholder="Cari nama/blok..." 
                                 value={searchTerm} 
                                 onChange={(e) => setSearchTerm(e.target.value)} 
-                                className="flex-1 text-xs p-2 border rounded-xl shadow-sm" 
+                                className="flex-1 text-xs p-2 border rounded-xl shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500" 
                             />
                             <select 
                                 value={filterStatus} 
                                 onChange={(e) => setFilterStatus(e.target.value)} 
-                                className="w-1/3 text-xs p-2 border rounded-xl shadow-sm bg-white text-gray-700"
+                                className="w-1/3 text-xs p-2 border rounded-xl shadow-sm bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             >
                                 <option value="all">Semua</option>
                                 <option value="lunas">✅ Lunas</option>
@@ -427,7 +529,7 @@ function App() {
 
                         <div className="space-y-1.5">
                             {filteredCitizens.length === 0 && (
-                                <p className="text-center text-xs text-gray-400 pt-4">Data warga masih kosong.</p>
+                                <p className="text-center text-xs text-gray-400 pt-4">Data warga tidak ditemukan.</p>
                             )}
                             {filteredCitizens.map(c => ( 
                                 <div key={c.id} className="bg-white p-2 rounded-xl border shadow-sm flex justify-between items-center"> 
@@ -436,9 +538,24 @@ function App() {
                                         <p className="text-[9px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-0.5 inline-block">{c.block}</p>
                                     </div> 
                                     <div className="flex gap-1 items-center"> 
-                                        <button onClick={() => handleEditCitizen(c)} className="text-blue-600 text-[10px] px-1">Edit</button> 
-                                        <button onClick={() => handleDeleteCitizen(c.id)} className="text-red-500 text-[10px] px-1">Hapus</button> 
-                                        {isPaid(c.id) ? <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold">Lunas</span> : <button onClick={() => setShowPayModal({ isOpen: true, citizen: c })} className="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold">Bayar</button>} 
+                                        {/* HANYA ADMIN YANG BISA EDIT/HAPUS */}
+                                        {isAdmin && (
+                                            <>
+                                                <button onClick={() => handleEditCitizen(c)} className="text-blue-600 text-[10px] px-1 font-medium">Edit</button> 
+                                                <button onClick={() => handleDeleteCitizen(c.id)} className="text-red-500 text-[10px] px-1 font-medium">Hapus</button> 
+                                            </>
+                                        )}
+                                        
+                                        {/* TOMBOL BAYAR JUGA HANYA ADMIN */}
+                                        {isPaid(c.id) ? (
+                                            <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold ml-1 border border-green-200">Lunas</span>
+                                        ) : (
+                                            isAdmin ? (
+                                                <button onClick={() => setShowPayModal({ isOpen: true, citizen: c })} className="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold ml-1 shadow-sm">Bayar</button>
+                                            ) : (
+                                                <span className="text-[9px] bg-red-50 text-red-500 px-2 py-0.5 rounded font-bold ml-1 border border-red-100">Belum</span>
+                                            )
+                                        )} 
                                     </div> 
                                 </div> 
                             ))}
@@ -448,37 +565,41 @@ function App() {
 
                 {activeTab === 'kas' && ( 
                     <div className="flex flex-col space-y-2"> 
-                        <div className="flex gap-2">
-                            <button onClick={() => { setEditTransData(null); setShowTransModal(true); }} className="flex-1 bg-blue-800 text-white p-2 rounded-xl font-bold text-xs shadow-md hover:bg-blue-900">+ Transaksi Baru</button> 
-                            
-                            <button onClick={handleSyncToSheets} disabled={isSyncing} className={`flex-none px-3 bg-emerald-600 text-white rounded-xl font-bold text-xs shadow-md ${isSyncing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-700'}`}>
-                                {isSyncing ? '🔄 Mengirim...' : '☁️ Kirim ke Sheets'}
-                            </button> 
-                        </div>
+                        
+                        {/* HANYA ADMIN YANG BISA NAMBAH TRANSAKSI ATAU KIRIM KE SHEETS */}
+                        {isAdmin && (
+                            <div className="flex gap-2">
+                                <button onClick={() => { setEditTransData(null); setShowTransModal(true); }} className="flex-1 bg-blue-800 text-white p-2 rounded-xl font-bold text-xs shadow-md hover:bg-blue-900">+ Transaksi Baru</button> 
+                                
+                                <button onClick={handleSyncToSheets} disabled={isSyncing} className={`flex-none px-3 bg-emerald-600 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-1 ${isSyncing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-700'}`}>
+                                    {isSyncing ? '🔄 Mengirim...' : '☁️ Kirim ke Sheets'}
+                                </button> 
+                            </div>
+                        )}
 
                         <div className="flex flex-col gap-1.5 bg-white p-1.5 rounded-xl border shadow-sm">
                             <div className="grid grid-cols-2 gap-1.5">
-                                <select value={filterTransMonth} onChange={(e) => setFilterTransMonth(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700">
+                                <select value={filterTransMonth} onChange={(e) => setFilterTransMonth(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700 focus:outline-none">
                                     <option value="all">📅 Semua Bulan</option>
                                     {MONTH_NAMES.map((name, idx) => <option key={idx} value={idx}>{name}</option>)}
                                 </select>
-                                <select value={filterTransYear} onChange={(e) => setFilterTransYear(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700">
+                                <select value={filterTransYear} onChange={(e) => setFilterTransYear(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700 focus:outline-none">
                                     <option value="all">🗓️ Semua Tahun</option>
                                     {AVAILABLE_YEARS.map(yr => <option key={yr} value={yr}>{yr}</option>)}
                                 </select>
                             </div>
                             <div className="grid grid-cols-3 gap-1.5">
-                                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700">
+                                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700 focus:outline-none">
                                     <option value="all">🔄 Tipe</option>
                                     <option value="masuk">➕ Masuk</option>
                                     <option value="keluar">➖ Keluar</option>
                                 </select>
-                                <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700">
+                                <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700 focus:outline-none">
                                     <option value="all">💳 Metode</option>
                                     <option value="tunai">💵 Tunai</option>
                                     <option value="qris">📱 QRIS</option>
                                 </select>
-                                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700">
+                                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700 focus:outline-none">
                                     <option value="all">📂 Kategori</option>
                                     {Object.entries(CATEGORIES).map(([k,v]) => <option key={k} value={k}>{v.name}</option>)}
                                 </select>
@@ -506,10 +627,13 @@ function App() {
                                     <div className="flex items-center gap-2"> 
                                         <p className={`font-bold text-xs ${t.type === 'masuk' ? 'text-green-600' : 'text-red-600'}`}>{t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.nominal)}</p> 
                                         
-                                        <div className="flex gap-1 border-l border-gray-200 pl-2 ml-1">
-                                            <button onClick={() => { setEditTransData(t); setShowTransModal(true); }} className="text-blue-500 text-xs hover:text-blue-700" title="Edit">✎</button> 
-                                            <button onClick={() => handleDeleteTransaction(t.id)} className="text-red-400 text-xs hover:text-red-600" title="Hapus">✕</button> 
-                                        </div>
+                                        {/* HANYA ADMIN YANG BISA EDIT/HAPUS TRANSAKSI */}
+                                        {isAdmin && (
+                                            <div className="flex gap-1 border-l border-gray-200 pl-2 ml-1">
+                                                <button onClick={() => { setEditTransData(t); setShowTransModal(true); }} className="text-blue-500 text-xs hover:text-blue-700" title="Edit">✎</button> 
+                                                <button onClick={() => handleDeleteTransaction(t.id)} className="text-red-400 text-xs hover:text-red-600" title="Hapus">✕</button> 
+                                            </div>
+                                        )}
                                     </div> 
                                 </div> 
                             ))}
@@ -521,51 +645,98 @@ function App() {
                 )} 
             </main>
 
-            <nav className="flex-none bg-white border-t border-gray-200 flex justify-around p-2"> 
-                <button onClick={() => setActiveTab('home')} className={`text-xs ${activeTab === 'home' ? 'font-bold text-blue-800' : 'text-gray-400'}`}>Beranda</button> 
-                <button onClick={() => setActiveTab('warga')} className={`text-xs ${activeTab === 'warga' ? 'font-bold text-blue-800' : 'text-gray-400'}`}>Data Warga</button> 
-                <button onClick={() => setActiveTab('kas')} className={`text-xs ${activeTab === 'kas' ? 'font-bold text-blue-800' : 'text-gray-400'}`}>Kas RT</button> 
+            {/* NAVIGASI BAWAH DENGAN IKON */}
+            <nav className="flex-none bg-white border-t border-gray-200 flex justify-around items-center p-2 pb-safe"> 
+                <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 w-20 py-1 transition-colors ${activeTab === 'home' ? 'text-blue-800' : 'text-gray-400 hover:text-gray-600'}`}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'home' ? 2.5 : 2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    <span className={`text-[10px] ${activeTab === 'home' ? 'font-bold' : 'font-medium'}`}>Beranda</span>
+                </button> 
+                
+                <button onClick={() => setActiveTab('warga')} className={`flex flex-col items-center gap-1 w-20 py-1 transition-colors ${activeTab === 'warga' ? 'text-blue-800' : 'text-gray-400 hover:text-gray-600'}`}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'warga' ? 2.5 : 2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span className={`text-[10px] ${activeTab === 'warga' ? 'font-bold' : 'font-medium'}`}>Data Warga</span>
+                </button> 
+                
+                <button onClick={() => setActiveTab('kas')} className={`flex flex-col items-center gap-1 w-20 py-1 transition-colors ${activeTab === 'kas' ? 'text-blue-800' : 'text-gray-400 hover:text-gray-600'}`}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'kas' ? 2.5 : 2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                    </svg>
+                    <span className={`text-[10px] ${activeTab === 'kas' ? 'font-bold' : 'font-medium'}`}>Uang Kas</span>
+                </button> 
             </nav> 
 
-            {showPayModal.isOpen && ( 
-                <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4"> 
-                    <div className="bg-white p-5 rounded-2xl w-full max-w-sm"> 
-                        <h3 className="font-bold text-sm mb-4">Pilih Metode Pembayaran</h3>
-                        <div className="grid grid-cols-2 gap-3"> 
-                            <button onClick={() => handlePayDues('tunai')} className="p-4 bg-orange-100 hover:bg-orange-200 rounded-xl font-bold text-sm transition">Tunai</button> 
-                            <button onClick={() => handlePayDues('qris')} className="p-4 bg-blue-100 hover:bg-blue-200 rounded-xl font-bold text-sm transition">QRIS</button> 
-                        </div> 
-                        <button onClick={() => setShowPayModal({ isOpen: false, citizen: null })} className="w-full mt-4 text-gray-400 text-xs hover:text-gray-600">Batal</button> 
+            {/* MODAL LOGIN ADMIN */}
+            {showLoginModal && (
+                <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"> 
+                    <div className="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl"> 
+                        <h3 className="font-bold text-lg text-center text-gray-800 mb-1">Login Admin</h3>
+                        <p className="text-center text-[10px] text-gray-500 mb-5">Masuk untuk menambah dan mengedit data</p>
+                        
+                        {loginError && <p className="text-xs text-red-500 bg-red-50 p-2 rounded mb-3 text-center border border-red-100">{loginError}</p>}
+                        
+                        <form onSubmit={handleLogin} className="space-y-3">
+                            <div>
+                                <label className="text-[10px] font-bold text-gray-600 ml-1">Username</label>
+                                <input name="username" type="text" className="w-full mt-1 text-sm p-3 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-bold text-gray-600 ml-1">Password</label>
+                                <input name="password" type="password" className="w-full mt-1 text-sm p-3 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required />
+                            </div>
+                            <div className="flex gap-2 pt-3">
+                                <button type="button" onClick={() => { setShowLoginModal(false); setLoginError(''); }} className="flex-1 border border-gray-300 text-gray-600 p-3 rounded-xl text-xs font-bold hover:bg-gray-100 transition">Batal</button> 
+                                <button type="submit" className="flex-1 bg-blue-600 text-white p-3 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-md transition">Login</button> 
+                            </div>
+                        </form>
                     </div> 
                 </div> 
             )}
 
-            {showTransModal && ( 
-                <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4"> 
-                    <form key={editTransData ? editTransData.id : 'new'} onSubmit={handleSaveTransaction} className="bg-white p-5 rounded-2xl w-full max-w-sm space-y-3"> 
-                        <h3 className="font-bold text-sm">{editTransData ? 'Edit Transaksi' : 'Transaksi Baru'}</h3> 
+            {/* MODAL BAYAR */}
+            {showPayModal.isOpen && isAdmin && ( 
+                <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm"> 
+                    <div className="bg-white p-5 rounded-2xl w-full max-w-sm shadow-2xl"> 
+                        <h3 className="font-bold text-sm mb-4 text-center text-gray-800">Pilih Metode Pembayaran</h3>
+                        <div className="grid grid-cols-2 gap-3"> 
+                            <button onClick={() => handlePayDues('tunai')} className="p-4 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded-xl font-bold text-sm transition shadow-sm">Tunai</button> 
+                            <button onClick={() => handlePayDues('qris')} className="p-4 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-xl font-bold text-sm transition shadow-sm">QRIS</button> 
+                        </div> 
+                        <button onClick={() => setShowPayModal({ isOpen: false, citizen: null })} className="w-full mt-4 text-gray-400 text-xs hover:text-gray-600 font-medium p-2">Batal</button> 
+                    </div> 
+                </div> 
+            )}
+
+            {/* MODAL TRANSAKSI */}
+            {showTransModal && isAdmin && ( 
+                <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm"> 
+                    <form key={editTransData ? editTransData.id : 'new'} onSubmit={handleSaveTransaction} className="bg-white p-5 rounded-2xl w-full max-w-sm space-y-3 shadow-2xl"> 
+                        <h3 className="font-bold text-sm text-gray-800 mb-2">{editTransData ? 'Edit Transaksi' : 'Transaksi Baru'}</h3> 
                         
-                        <input name="ket" defaultValue={editTransData?.ket || ''} placeholder="Keterangan" className="w-full text-xs p-2 border rounded-xl bg-gray-50 focus:bg-white" required /> 
-                        <input name="nom" type="number" defaultValue={editTransData?.nominal || ''} placeholder="Nominal" className="w-full text-xs p-2 border rounded-xl bg-gray-50 focus:bg-white" required /> 
-                        <input name="date" type="date" defaultValue={editTransData ? editTransData.date.split('T')[0] : localToday} className="w-full text-xs p-2 border rounded-xl bg-gray-50 focus:bg-white" required />
+                        <input name="ket" defaultValue={editTransData?.ket || ''} placeholder="Keterangan" className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required /> 
+                        <input name="nom" type="number" defaultValue={editTransData?.nominal || ''} placeholder="Nominal" className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required /> 
+                        <input name="date" type="date" defaultValue={editTransData ? editTransData.date.split('T')[0] : localToday} className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required />
                         
                         <div className="grid grid-cols-2 gap-2">
-                            <select name="type" defaultValue={editTransData?.type || 'masuk'} className="w-full text-xs p-2 border rounded-xl bg-gray-50">
+                            <select name="type" defaultValue={editTransData?.type || 'masuk'} className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="masuk">Pemasukan</option>
                                 <option value="keluar">Pengeluaran</option>
                             </select> 
-                            <select name="method" defaultValue={editTransData?.method || 'tunai'} className="w-full text-xs p-2 border rounded-xl bg-gray-50">
+                            <select name="method" defaultValue={editTransData?.method || 'tunai'} className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="tunai">Tunai</option>
                                 <option value="qris">QRIS</option>
                             </select> 
                         </div>
-                        <select name="cat" defaultValue={editTransData?.category || 'kas_rt'} className="w-full text-xs p-2 border rounded-xl bg-gray-50">
+                        <select name="cat" defaultValue={editTransData?.category || 'kas_rt'} className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
                             {Object.entries(CATEGORIES).map(([k,v]) => <option key={k} value={k}>{v.name}</option>)}
                         </select> 
                         
-                        <div className="flex gap-2">
-                            <button type="button" onClick={() => { setShowTransModal(false); setEditTransData(null); }} className="flex-1 border border-gray-300 text-gray-500 p-2 rounded-xl text-xs hover:bg-gray-50">Batal</button> 
-                            <button type="submit" className="flex-1 bg-blue-800 text-white p-2 rounded-xl text-xs font-bold hover:bg-blue-900">Simpan</button> 
+                        <div className="flex gap-2 pt-2">
+                            <button type="button" onClick={() => { setShowTransModal(false); setEditTransData(null); }} className="flex-1 border border-gray-300 text-gray-500 p-2.5 rounded-xl text-xs hover:bg-gray-100 font-medium transition">Batal</button> 
+                            <button type="submit" className="flex-1 bg-blue-800 text-white p-2.5 rounded-xl text-xs font-bold hover:bg-blue-900 shadow-md transition">Simpan</button> 
                         </div>
                     </form> 
                 </div> 
