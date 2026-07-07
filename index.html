@@ -8,11 +8,35 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script> 
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script> 
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
     <style>
+        :root {
+            --navy-900: #0a0e27;
+            --navy-800: #111a3a;
+            --navy-700: #1a2550;
+            --gold-400: #fbbf24;
+            --gold-500: #f59e0b;
+            --emerald-glow: #10b981;
+        }
+        
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        h1, h2, h3, .font-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+        
+        body {
+            background: 
+                radial-gradient(circle at 20% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        /* Marquee */
         .marquee-container {
             display: flex;
             overflow: hidden;
@@ -20,19 +44,323 @@
             flex: 1;
             min-width: 0;
             margin-right: 12px;
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
         }
         .marquee-content {
-            animation: marquee 12s linear infinite;
+            animation: marquee 20s linear infinite;
             padding-left: 100%;
             display: inline-block;
+            background: linear-gradient(90deg, #fbbf24, #ffffff, #fbbf24);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: marquee 20s linear infinite, shimmer 3s linear infinite;
         }
         @keyframes marquee {
             0% { transform: translate(0, 0); }
             100% { transform: translate(-100%, 0); }
         }
+        @keyframes shimmer {
+            to { background-position: 200% center; }
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 
+                0 8px 32px 0 rgba(31, 38, 135, 0.08),
+                0 2px 8px 0 rgba(31, 38, 135, 0.04);
+        }
+        
+        .glass-dark {
+            background: rgba(17, 26, 58, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Premium Card */
+        .premium-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 
+                0 1px 2px rgba(15, 23, 42, 0.04),
+                0 4px 16px rgba(15, 23, 42, 0.06),
+                0 12px 40px rgba(15, 23, 42, 0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .premium-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 2px 4px rgba(15, 23, 42, 0.06),
+                0 8px 24px rgba(15, 23, 42, 0.1),
+                0 20px 60px rgba(15, 23, 42, 0.08);
+        }
+
+        /* Hero Gradient */
+        .hero-gradient {
+            background: 
+                radial-gradient(circle at 0% 0%, rgba(251, 191, 36, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.2) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0e27 0%, #1a2550 50%, #111a3a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-gradient::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(251, 191, 36, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 40%);
+            pointer-events: none;
+        }
+        .hero-gradient::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+            box-shadow: 
+                0 4px 12px rgba(30, 64, 175, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 
+                0 8px 20px rgba(30, 64, 175, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-gold {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #451a03;
+            box-shadow: 
+                0 4px 12px rgba(245, 158, 11, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-gold:hover {
+            transform: translateY(-1px);
+            box-shadow: 
+                0 8px 20px rgba(245, 158, 11, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-emerald {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 
+                0 4px 12px rgba(16, 185, 129, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-emerald:hover {
+            transform: translateY(-1px);
+            box-shadow: 
+                0 8px 20px rgba(16, 185, 129, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Glow effects */
+        .glow-gold { box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+        .glow-emerald { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+
+        /* Progress bar */
+        .progress-track {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.1));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #fbbf24 100%);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.6), 0 0 4px rgba(251, 191, 36, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shine 2s linear infinite;
+        }
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Bottom nav */
+        .bottom-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border-top: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.08);
+        }
+        .nav-item {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 3px;
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+        }
+        .nav-item.active .nav-icon {
+            color: #1e40af;
+            transform: translateY(-2px);
+            filter: drop-shadow(0 4px 8px rgba(30, 64, 175, 0.3));
+        }
+        .nav-item.active .nav-label {
+            color: #1e3a8a;
+            font-weight: 700;
+        }
+
+        /* Inputs */
+        .input-premium {
+            background: linear-gradient(145deg, #f8fafc 0%, #ffffff 100%);
+            border: 1.5px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .input-premium:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            outline: none;
+            background: #ffffff;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.5); }
+
+        /* Stat card */
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 80px; height: 80px;
+            background: radial-gradient(circle, currentColor 0%, transparent 70%);
+            opacity: 0.05;
+            transform: translate(30%, -30%);
+        }
+
+        /* Badge */
+        .badge-premium {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            background: rgba(10, 14, 39, 0.6);
+        }
+        .modal-content {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 
+                0 20px 60px rgba(10, 14, 39, 0.3),
+                0 8px 24px rgba(10, 14, 39, 0.15);
+            animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Citizen row */
+        .citizen-row {
+            background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.2s ease;
+        }
+        .citizen-row:hover {
+            border-color: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.08);
+        }
+
+        /* Pulse dot */
+        .pulse-dot {
+            position: relative;
+        }
+        .pulse-dot::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            background: #10b981;
+            opacity: 0.6;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 0; transform: scale(2); }
+        }
+
+        /* Category card */
+        .category-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        }
+
+        /* Transaction row */
+        .trans-row {
+            background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.2s ease;
+        }
+        .trans-row:hover {
+            border-color: rgba(59, 130, 246, 0.15);
+            transform: translateX(2px);
+        }
+
+        /* Number display */
+        .num-display {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        /* Safe area */
+        .pb-safe { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+        .pt-safe { padding-top: max(0.5rem, env(safe-area-inset-top)); }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 antialiased select-none"> 
+<body class="text-slate-800 antialiased select-none"> 
     <div id="root"></div>
 
 <script type="text/babel"> 
@@ -73,7 +401,6 @@ const MONTH_NAMES = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Ju
 const AVAILABLE_YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
 
 function App() { 
-    // --- STATE LOGIN ADMIN ---
     const [adminUser, setAdminUser] = useState(localStorage.getItem('adminUserAdelia') || null);
     const isAdmin = !!adminUser;
 
@@ -110,7 +437,6 @@ function App() {
         return `${yyyy}-${mm}-${dd}`;
     }, []);
 
-    // --- FUNGSI LOGIN / LOGOUT ---
     const handleLogin = (e) => {
         e.preventDefault();
         const u = e.target.username.value;
@@ -135,7 +461,6 @@ function App() {
         }
     };
 
-    // 3. EFEK SINKRONISASI REAL-TIME DENGAN FIREBASE
     useEffect(() => { 
         const citizensRef = database.ref('citizens');
         const transactionsRef = database.ref('transactions');
@@ -221,8 +546,8 @@ function App() {
         const newId = Date.now();
         
         const ketText = nominal === 25000 
-            ? `Iuran ${MONTH_NAMES[activeMonth]} (Keamanan) - ${c.name}` 
-            : `Iuran ${MONTH_NAMES[activeMonth]} (Keamanan+Sampah) - ${c.name}`;
+            ? `${c.name}` 
+            : `${c.name}`;
 
         const newT = { 
             id: newId, 
@@ -236,7 +561,7 @@ function App() {
             isDues: true,
             duesMonth: activeMonth, 
             duesYear: activeYear,
-            createdBy: adminUser // Menyimpan info admin yang menginput
+            createdBy: adminUser
         }; 
         
         database.ref('transactions/' + newId).set(newT);
@@ -321,7 +646,7 @@ function App() {
                 id: newId,
                 name: name.trim(),
                 block: block.trim(),
-                createdBy: adminUser // Menyimpan info admin yang menginput warga
+                createdBy: adminUser
             });
         }
     };
@@ -394,131 +719,192 @@ function App() {
 
 
     return ( 
-        <div className="max-w-md mx-auto h-screen flex flex-col bg-gray-50 shadow-xl border-x border-gray-200 relative"> 
+        <div className="max-w-md mx-auto h-screen flex flex-col relative"> 
 
-            <header className="bg-blue-800 text-white p-3 shadow-md flex-none flex justify-between items-center sticky top-0 z-50"> 
-                
-                {/* HEADER TEKS BERJALAN (MARQUEE) */}
+            {/* HEADER */}
+            <header className="hero-gradient text-white px-4 py-3 shadow-2xl flex-none flex justify-between items-center sticky top-0 z-50 pt-safe"> 
                 <div className="marquee-container">
-                    <h1 className="marquee-content text-xs font-bold tracking-wider uppercase">
-                        Green Adelia Residance RT 70 RW 02
+                    <h1 className="marquee-content text-[11px] font-bold tracking-[0.2em] uppercase font-display">
+                        ✦ GREEN ADELIA RESIDANCE · RT 70 RW 02 ✦
                     </h1> 
                 </div>
 
                 <div className="flex items-center gap-2 flex-none">
-                    <span className="text-[10px] bg-blue-700 px-2 py-0.5 rounded font-mono flex items-center shadow-inner">
-                        <span className="inline-block w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5 animate-pulse"></span>
-                        {MONTH_NAMES[activeMonth].substring(0,3)} {activeYear}
+                    <span className="text-[10px] glass-dark px-2.5 py-1 rounded-full font-mono flex items-center shadow-lg border border-white/10">
+                        <span className="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5 pulse-dot relative"></span>
+                        <span className="text-white/90">{MONTH_NAMES[activeMonth].substring(0,3)} {activeYear}</span>
                     </span>
                     
                     {isAdmin ? (
-                        <button onClick={handleLogout} className="text-[10px] bg-red-500 hover:bg-red-600 px-2 py-1 rounded shadow-sm">Logout ({adminUser})</button>
+                        <button onClick={handleLogout} className="text-[10px] bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 px-3 py-1.5 rounded-full shadow-lg font-bold border border-red-400/30 transition-all">
+                            ⏻ {adminUser}
+                        </button>
                     ) : (
-                        <button onClick={() => setShowLoginModal(true)} className="text-[10px] bg-blue-600 hover:bg-blue-500 border border-blue-400 px-2 py-1 rounded shadow-sm">Login</button>
+                        <button onClick={() => setShowLoginModal(true)} className="text-[10px] btn-gold px-3 py-1.5 rounded-full font-bold">
+                            🔐 Login
+                        </button>
                     )}
                 </div>
             </header>
 
-            <main className="flex-1 p-2.5 pb-16 overflow-y-auto"> 
+            <main className="flex-1 p-3 pb-20 overflow-y-auto"> 
                 
                 {activeTab === 'home' && ( 
-                    <div className="flex flex-col space-y-1.5"> 
-                        <div className="grid grid-cols-2 gap-1.5 bg-white p-1 rounded-xl border shadow-sm">
-                            <div className="flex flex-col gap-0.5">
-                                <label className="text-[8px] font-bold text-gray-400 uppercase px-1">Pilih Bulan</label>
-                                <select value={activeMonth} onChange={(e) => setActiveMonth(parseInt(e.target.value))} className="text-[11px] p-1 border border-gray-100 rounded-lg bg-gray-50 font-bold text-gray-700">
-                                    {MONTH_NAMES.map((name, idx) => <option key={idx} value={idx}>{name}</option>)}
-                                </select>
-                            </div>
-                            <div className="flex flex-col gap-0.5">
-                                <label className="text-[8px] font-bold text-gray-400 uppercase px-1">Pilih Tahun</label>
-                                <select value={activeYear} onChange={(e) => setActiveYear(parseInt(e.target.value))} className="text-[11px] p-1 border border-gray-100 rounded-lg bg-gray-50 font-bold text-gray-700">
-                                    {AVAILABLE_YEARS.map(yr => <option key={yr} value={yr}>{yr}</option>)}
-                                </select>
+                    <div className="flex flex-col space-y-3"> 
+                        {/* Month/Year Selector */}
+                        <div className="glass rounded-2xl p-3">
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
+                                        <span className="w-1 h-1 rounded-full bg-blue-500"></span> Bulan
+                                    </label>
+                                    <select value={activeMonth} onChange={(e) => setActiveMonth(parseInt(e.target.value))} className="text-[11px] p-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-700 input-premium">
+                                        {MONTH_NAMES.map((name, idx) => <option key={idx} value={idx}>{name}</option>)}
+                                    </select>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <label className="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-1 flex items-center gap-1">
+                                        <span className="w-1 h-1 rounded-full bg-amber-500"></span> Tahun
+                                    </label>
+                                    <select value={activeYear} onChange={(e) => setActiveYear(parseInt(e.target.value))} className="text-[11px] p-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-700 input-premium">
+                                        {AVAILABLE_YEARS.map(yr => <option key={yr} value={yr}>{yr}</option>)}
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="bg-gradient-to-br from-blue-700 to-blue-900 p-3 rounded-xl text-white shadow-lg space-y-1.5"> 
-                            <div>
-                                <p className="text-blue-200 text-[9px] font-medium">Total Kas Keseluruhan</p> 
-                                <p className="text-xl font-bold tracking-tight">{formatRupiah(financialData.total)}</p> 
+                        {/* Hero Card */}
+                        <div className="hero-gradient rounded-3xl p-5 text-white shadow-2xl space-y-4 relative overflow-hidden"> 
+                            <div className="relative z-10">
+                                <div className="flex items-center justify-between mb-1">
+                                    <p className="text-blue-200 text-[10px] font-medium uppercase tracking-widest flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                        Total Kas Keseluruhan
+                                    </p>
+                                    <span className="text-[9px] bg-white/10 backdrop-blur px-2 py-0.5 rounded-full border border-white/20">💰 Saldo</span>
+                                </div>
+                                <p className="text-3xl font-bold tracking-tight num-display bg-gradient-to-br from-white via-amber-100 to-amber-300 bg-clip-text text-transparent drop-shadow-lg">
+                                    {formatRupiah(financialData.total)}
+                                </p> 
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-blue-600/30 text-[10px]"> 
-                                <div><p className="text-[8px] text-blue-300 uppercase tracking-wider">Tunai</p><p className="font-semibold truncate">{formatRupiah(financialData.cash)}</p></div> 
-                                <div><p className="text-[8px] text-blue-300 uppercase tracking-wider">QRIS</p><p className="font-semibold truncate">{formatRupiah(financialData.qris)}</p></div> 
+                            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-white/10 relative z-10"> 
+                                <div className="bg-white/5 backdrop-blur rounded-xl p-2.5 border border-white/10">
+                                    <p className="text-[9px] text-blue-200 uppercase tracking-wider flex items-center gap-1">💵 Tunai</p>
+                                    <p className="font-bold text-sm text-white mt-1 num-display truncate">{formatRupiah(financialData.cash)}</p>
+                                </div> 
+                                <div className="bg-white/5 backdrop-blur rounded-xl p-2.5 border border-white/10">
+                                    <p className="text-[9px] text-blue-200 uppercase tracking-wider flex items-center gap-1">📱 QRIS</p>
+                                    <p className="font-bold text-sm text-white mt-1 num-display truncate">{formatRupiah(financialData.qris)}</p>
+                                </div> 
                             </div> 
 
-                            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-blue-600/30 text-[10px]"> 
-                                <div><p className="text-[8px] text-emerald-300 uppercase tracking-wider font-bold">Total Masuk (Semua)</p><p className="font-bold text-emerald-200 truncate">{formatRupiah(financialData.allTimeIncome)}</p></div> 
-                                <div><p className="text-[8px] text-rose-300 uppercase tracking-wider font-bold">Total Keluar (Semua)</p><p className="font-bold text-rose-200 truncate">{formatRupiah(financialData.allTimeExpense)}</p></div> 
+                            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-white/10 relative z-10"> 
+                                <div className="bg-emerald-500/10 backdrop-blur rounded-xl p-2.5 border border-emerald-400/20">
+                                    <p className="text-[9px] text-emerald-300 uppercase tracking-wider font-bold flex items-center gap-1">📈 Total Masuk</p>
+                                    <p className="font-bold text-sm text-emerald-100 mt-1 num-display truncate">{formatRupiah(financialData.allTimeIncome)}</p>
+                                </div> 
+                                <div className="bg-rose-500/10 backdrop-blur rounded-xl p-2.5 border border-rose-400/20">
+                                    <p className="text-[9px] text-rose-300 uppercase tracking-wider font-bold flex items-center gap-1">📉 Total Keluar</p>
+                                    <p className="font-bold text-sm text-rose-100 mt-1 num-display truncate">{formatRupiah(financialData.allTimeExpense)}</p>
+                                </div> 
                             </div> 
 
-                            <div className="pt-1 border-t border-blue-600/30 space-y-1">
-                                <div className="text-[9px] text-blue-200 font-medium">📊 Warga Lunas (Iuran)</div>
-                                <div className="w-full bg-blue-950/40 rounded-full h-1 overflow-hidden">
-                                    <div className="bg-gradient-to-r from-teal-400 to-emerald-400 h-1 rounded-full" style={{ width: `${duesProgress.percent}%` }}></div>
+                            <div className="pt-3 border-t border-white/10 space-y-2 relative z-10">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-[10px] text-blue-100 font-medium flex items-center gap-1.5">
+                                        <span className="text-base">📊</span> Warga Lunas (Iuran)
+                                    </div>
+                                    <span className="font-mono font-bold text-amber-300 bg-black/30 backdrop-blur px-2 py-0.5 rounded-full text-[10px] border border-amber-400/30">
+                                        {duesProgress.percent}%
+                                    </span>
                                 </div>
-                                <div className="flex justify-between items-center text-[9px] text-blue-200 pt-0.5">
+                                <div className="progress-track w-full rounded-full h-2 overflow-hidden">
+                                    <div className="progress-fill h-2 rounded-full transition-all duration-700" style={{ width: `${duesProgress.percent}%` }}></div>
+                                </div>
+                                <div className="flex justify-between items-center text-[10px] text-blue-200">
                                     <span>Sudah Lunas: <strong className="text-white">{duesProgress.paid}</strong> dari <strong className="text-white">{duesProgress.total} Warga</strong></span>
-                                    <span className="font-mono font-bold text-emerald-300 bg-blue-950/50 px-1 rounded text-[8px]">{duesProgress.percent}%</span>
                                 </div>
                             </div>
                         </div> 
                         
-                        <div className="grid grid-cols-2 gap-1.5"> 
-                            <div className="bg-white p-1.5 rounded-xl border border-green-100 shadow-sm">
-                                <p className="text-[8px] text-green-600 font-bold uppercase tracking-wider">Pemasukan ({MONTH_NAMES[activeMonth].substring(0,3)})</p>
-                                <p className="text-[11px] font-bold text-green-700 mt-0.5">{formatRupiah(financialData.income)}</p>
+                        {/* Monthly Stats */}
+                        <div className="grid grid-cols-2 gap-2"> 
+                            <div className="premium-card p-3 rounded-2xl stat-card text-emerald-600">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-xs shadow-md">📈</div>
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Masuk</p>
+                                </div>
+                                <p className="text-[9px] text-slate-400 mb-0.5">{MONTH_NAMES[activeMonth].substring(0,3)}</p>
+                                <p className="text-sm font-bold text-emerald-700 num-display">{formatRupiah(financialData.income)}</p>
                             </div> 
-                            <div className="bg-white p-1.5 rounded-xl border border-red-100 shadow-sm">
-                                <p className="text-[8px] text-red-600 font-bold uppercase tracking-wider">Pengeluaran ({MONTH_NAMES[activeMonth].substring(0,3)})</p>
-                                <p className="text-[11px] font-bold text-red-700 mt-0.5">{formatRupiah(financialData.expense)}</p>
+                            <div className="premium-card p-3 rounded-2xl stat-card text-rose-600">
+                                <div className="flex items-center gap-1.5 mb-1">
+                                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center text-white text-xs shadow-md">📉</div>
+                                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Keluar</p>
+                                </div>
+                                <p className="text-[9px] text-slate-400 mb-0.5">{MONTH_NAMES[activeMonth].substring(0,3)}</p>
+                                <p className="text-sm font-bold text-rose-700 num-display">{formatRupiah(financialData.expense)}</p>
                             </div> 
                         </div> 
                         
+                        {/* Categories */}
                         <div>
-                            <div className="grid grid-cols-1 gap-1"> 
+                            <div className="grid grid-cols-1 gap-2"> 
                                 {Object.entries(CATEGORIES).map(([k, cat]) => ( 
-                                    <div key={k} className={`p-1.5 rounded-lg border ${cat.color} flex flex-col justify-between`}>
-                                        <p className="text-[9px] font-bold uppercase tracking-wide opacity-80">{cat.name}</p>
-                                        <p className="text-xs font-bold mt-0.5">{formatRupiah(financialData.catBalances[k] || 0)}</p>
+                                    <div key={k} className="category-card p-3 rounded-2xl border border-slate-200/60 shadow-sm">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm shadow-md">💼</div>
+                                                <div>
+                                                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{cat.name}</p>
+                                                    <p className="text-[9px] text-slate-400">Saldo Kategori</p>
+                                                </div>
+                                            </div>
+                                            <p className="text-base font-bold text-slate-800 num-display">{formatRupiah(financialData.catBalances[k] || 0)}</p>
+                                        </div>
                                     </div> 
                                 ))} 
                             </div> 
                         </div>
 
-                        {/* TABEL TERMASUK NAMA INPUT KECIL DI BAWAHNYA */}
-                        <div className="bg-white rounded-xl border shadow-sm overflow-hidden mt-1">
-                            <div className="bg-gray-50 px-2.5 py-2 border-b flex justify-between items-center">
-                                <h3 className="text-[10px] font-bold text-gray-700 uppercase">Riwayat Terakhir</h3>
-                                <button onClick={() => setActiveTab('kas')} className="text-[9px] text-blue-600 font-bold hover:underline">Lihat Semua</button>
+                        {/* Recent Transactions */}
+                        <div className="premium-card rounded-2xl overflow-hidden">
+                            <div className="bg-gradient-to-r from-slate-50 to-white px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center text-white text-xs shadow">🕐</div>
+                                    <div>
+                                        <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-wide">Riwayat Terakhir</h3>
+                                        <p className="text-[9px] text-slate-400">5 transaksi terbaru</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setActiveTab('kas')} className="text-[10px] text-blue-600 font-bold hover:text-blue-800 flex items-center gap-1 transition">
+                                    Semua <span>→</span>
+                                </button>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="bg-white text-[8px] uppercase text-gray-400 border-b">
-                                            <th className="px-2.5 py-1.5 font-bold">Tanggal</th>
-                                            <th className="px-2.5 py-1.5 font-bold">Keterangan</th>
-                                            <th className="px-2.5 py-1.5 font-bold text-right">Nominal</th>
-                                        </tr>
-                                    </thead>
                                     <tbody>
-                                        {transactions.slice(0, 5).map(t => (
-                                            <tr key={t.id} className="border-b last:border-b-0 hover:bg-gray-50">
-                                                <td className="px-2.5 py-2 text-[9px] whitespace-nowrap text-gray-500">{t.date.split('T')[0]}</td>
-                                                <td className="px-2.5 py-2 text-[9px] text-gray-800 max-w-[120px]">
-                                                    <div className="truncate font-medium">{t.ket}</div>
-                                                    {t.createdBy && <div className="text-[7px] text-gray-400 font-mono scale-95 origin-left">by: {t.createdBy}</div>}
+                                        {transactions.slice(0, 5).map((t, idx) => (
+                                            <tr key={t.id} className={`border-b border-slate-100 last:border-b-0 hover:bg-slate-50 transition ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}>
+                                                <td className="px-4 py-3 text-[10px] whitespace-nowrap">
+                                                    <div className="font-mono text-slate-500">{t.date.split('T')[0]}</div>
+                                                    {t.createdBy && <div className="text-[8px] text-slate-400 mt-0.5">by {t.createdBy}</div>}
                                                 </td>
-                                                <td className={`px-2.5 py-2 text-[9px] font-bold text-right whitespace-nowrap ${t.type === 'masuk' ? 'text-green-600' : 'text-red-600'}`}>
+                                                <td className="px-4 py-3 text-[10px] text-slate-700 max-w-[140px]">
+                                                    <div className="truncate font-semibold">{t.ket}</div>
+                                                </td>
+                                                <td className={`px-4 py-3 text-[11px] font-bold text-right whitespace-nowrap num-display ${t.type === 'masuk' ? 'text-emerald-600' : 'text-rose-600'}`}>
                                                     {t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.nominal)}
                                                 </td>
                                             </tr>
                                         ))}
                                         {transactions.length === 0 && (
                                             <tr>
-                                                <td colSpan="3" className="px-2.5 py-4 text-center text-xs text-gray-400">Belum ada transaksi</td>
+                                                <td colSpan="3" className="px-4 py-8 text-center text-xs text-slate-400">
+                                                    <div className="text-3xl mb-2 opacity-30">📭</div>
+                                                    Belum ada transaksi
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -530,29 +916,38 @@ function App() {
                 )}
 
                 {activeTab === 'warga' && ( 
-                    <div className="flex flex-col space-y-2"> 
-                        <div className="flex items-center gap-2 bg-white p-1 rounded-xl border shadow-sm"> 
-                            <button onClick={() => { setActiveMonth(activeMonth === 0 ? 11 : activeMonth - 1); if(activeMonth === 0) setActiveYear(activeYear - 1); }} className="p-1 hover:bg-gray-100 rounded-lg text-xs font-bold">&lt;</button> 
-                            <span className="font-bold text-xs flex-1 text-center text-gray-700">{MONTH_NAMES[activeMonth]} {activeYear}</span> 
-                            <button onClick={() => { setActiveMonth(activeMonth === 11 ? 0 : activeMonth + 1); if(activeMonth === 11) setActiveYear(activeYear + 1); }} className="p-1 hover:bg-gray-100 rounded-lg text-xs font-bold">&gt;</button> 
+                    <div className="flex flex-col space-y-3"> 
+                        {/* Month Navigator */}
+                        <div className="glass rounded-2xl p-2 flex items-center gap-2"> 
+                            <button onClick={() => { setActiveMonth(activeMonth === 0 ? 11 : activeMonth - 1); if(activeMonth === 0) setActiveYear(activeYear - 1); }} className="w-9 h-9 hover:bg-white rounded-xl text-sm font-bold flex items-center justify-center transition shadow-sm border border-slate-200">‹</button> 
+                            <div className="font-bold text-sm flex-1 text-center text-slate-700 font-display">
+                                {MONTH_NAMES[activeMonth]} <span className="text-amber-600">{activeYear}</span>
+                            </div> 
+                            <button onClick={() => { setActiveMonth(activeMonth === 11 ? 0 : activeMonth + 1); if(activeMonth === 11) setActiveYear(activeYear + 1); }} className="w-9 h-9 hover:bg-white rounded-xl text-sm font-bold flex items-center justify-center transition shadow-sm border border-slate-200">›</button> 
                         </div> 
                         
                         {isAdmin && (
-                            <button onClick={handleAddCitizen} className="w-full p-2 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-sm hover:bg-blue-700">+ Tambah Warga Baru</button> 
+                            <button onClick={handleAddCitizen} className="w-full p-3 btn-primary text-white rounded-2xl font-bold text-xs shadow-lg flex items-center justify-center gap-2">
+                                <span className="text-base">➕</span> Tambah Warga Baru
+                            </button> 
                         )}
                         
-                        <div className="flex gap-2">
-                            <input 
-                                type="text" 
-                                placeholder="Cari nama/blok..." 
-                                value={searchTerm} 
-                                onChange={(e) => setSearchTerm(e.target.value)} 
-                                className="flex-1 text-xs p-2 border rounded-xl shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                            />
+                        {/* Search & Filter */}
+                        <div className="glass rounded-2xl p-2 flex gap-2">
+                            <div className="flex-1 relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
+                                <input 
+                                    type="text" 
+                                    placeholder="Cari nama atau blok..." 
+                                    value={searchTerm} 
+                                    onChange={(e) => setSearchTerm(e.target.value)} 
+                                    className="w-full text-xs p-2 pl-8 rounded-xl input-premium" 
+                                />
+                            </div>
                             <select 
                                 value={filterStatus} 
                                 onChange={(e) => setFilterStatus(e.target.value)} 
-                                className="w-1/3 text-xs p-2 border rounded-xl shadow-sm bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="w-28 text-xs p-2 rounded-xl input-premium font-medium text-slate-700"
                             >
                                 <option value="all">Semua</option>
                                 <option value="lunas">✅ Lunas</option>
@@ -560,43 +955,51 @@ function App() {
                             </select>
                         </div>
 
-                        <div className="space-y-1.5">
+                        <div className="space-y-2">
                             {filteredCitizens.length === 0 && (
-                                <p className="text-center text-xs text-gray-400 pt-4">Data warga tidak ditemukan.</p>
+                                <div className="text-center py-8">
+                                    <div className="text-4xl mb-2 opacity-30">👥</div>
+                                    <p className="text-xs text-slate-400">Data warga tidak ditemukan.</p>
+                                </div>
                             )}
                             {filteredCitizens.map(c => {
                                 const paidAmount = getDuesTotalPaid(c.id);
                                 const isLunas = paidAmount >= 25000;
 
                                 return ( 
-                                <div key={c.id} className="bg-white p-2 rounded-xl border shadow-sm flex justify-between items-center"> 
-                                    <div>
-                                        <p className="font-bold text-xs text-gray-800">{c.name}</p>
-                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                            <p className="text-[9px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded inline-block">{c.block}</p>
-                                            {c.createdBy && <span className="text-[7px] text-gray-400 font-mono">by: {c.createdBy}</span>}
+                                <div key={c.id} className="citizen-row p-3 rounded-2xl flex justify-between items-center"> 
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md flex-none ${isLunas ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-slate-400 to-slate-600'}`}>
+                                            {c.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-bold text-xs text-slate-800 truncate">{c.name}</p>
+                                            <div className="flex items-center gap-1.5 mt-0.5">
+                                                <span className="text-[9px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200">🏠 {c.block}</span>
+                                                {c.createdBy && <span className="text-[8px] text-slate-400 font-mono hidden sm:inline">by {c.createdBy}</span>}
+                                            </div>
                                         </div>
                                     </div> 
-                                    <div className="flex gap-1 items-center"> 
+                                    <div className="flex gap-1 items-center flex-none"> 
                                         {isAdmin && (
                                             <>
-                                                <button onClick={() => handleEditCitizen(c)} className="text-blue-600 text-[10px] px-1 font-medium">Edit</button> 
-                                                <button onClick={() => handleDeleteCitizen(c.id)} className="text-red-500 text-[10px] px-1 font-medium">Hapus</button> 
+                                                <button onClick={() => handleEditCitizen(c)} className="text-blue-600 text-[10px] px-2 py-1 font-medium hover:bg-blue-50 rounded-lg transition">✎</button> 
+                                                <button onClick={() => handleDeleteCitizen(c.id)} className="text-rose-500 text-[10px] px-2 py-1 font-medium hover:bg-rose-50 rounded-lg transition">✕</button> 
                                             </>
                                         )}
                                         
                                         {isLunas ? (
-                                            <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold ml-1 border border-green-200">
-                                                Lunas {paidAmount === 25000 ? '(Keamanan)' : '(Semua)'}
+                                            <span className="text-[9px] bg-gradient-to-br from-emerald-50 to-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full font-bold border border-emerald-200 shadow-sm badge-premium">
+                                                ✓ {paidAmount === 25000 ? 'Keamanan' : 'Lunas'}
                                             </span>
                                         ) : (
                                             <div className="flex items-center">
-                                                {!isAdmin && <span className="text-[9px] bg-red-50 text-red-500 px-2 py-0.5 rounded font-bold ml-1 border border-red-100">Belum</span>}
+                                                {!isAdmin && <span className="text-[9px] bg-gradient-to-br from-rose-50 to-rose-100 text-rose-600 px-2.5 py-1 rounded-full font-bold border border-rose-200 shadow-sm">⏳ Belum</span>}
                                                 {isAdmin && (
                                                     <button onClick={() => {
                                                         setPayNominal(50000); 
                                                         setShowPayModal({ isOpen: true, citizen: c });
-                                                    }} className="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold ml-1 shadow-sm">Bayar</button>
+                                                    }} className="text-[9px] btn-gold px-3 py-1.5 rounded-full font-bold shadow-md">💳 Bayar</button>
                                                 )}
                                             </div>
                                         )} 
@@ -609,197 +1012,233 @@ function App() {
                 )}
 
                 {activeTab === 'kas' && ( 
-                    <div className="flex flex-col space-y-2"> 
+                    <div className="flex flex-col space-y-3"> 
                         {isAdmin && (
                             <div className="flex gap-2">
-                                <button onClick={() => { setEditTransData(null); setShowTransModal(true); }} className="flex-1 bg-blue-800 text-white p-2 rounded-xl font-bold text-xs shadow-md hover:bg-blue-900">+ Transaksi Baru</button> 
+                                <button onClick={() => { setEditTransData(null); setShowTransModal(true); }} className="flex-1 btn-primary text-white p-3 rounded-2xl font-bold text-xs shadow-lg flex items-center justify-center gap-2">
+                                    <span className="text-base">➕</span> Transaksi Baru
+                                </button> 
                                 
-                                <button onClick={handleSyncToSheets} disabled={isSyncing} className={`flex-none px-3 bg-emerald-600 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-1 ${isSyncing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-700'}`}>
-                                    {isSyncing ? '🔄 Mengirim...' : '☁️ Kirim ke Sheets'}
+                                <button onClick={handleSyncToSheets} disabled={isSyncing} className={`flex-none px-4 btn-emerald text-white rounded-2xl font-bold text-xs shadow-lg flex items-center justify-center gap-1.5 ${isSyncing ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                                    {isSyncing ? '⏳' : '☁️'} <span className="hidden sm:inline">Sheets</span>
                                 </button> 
                             </div>
                         )}
 
-                        <div className="flex flex-col gap-1.5 bg-white p-1.5 rounded-xl border shadow-sm">
-                            <div className="grid grid-cols-2 gap-1.5">
-                                <select value={filterTransMonth} onChange={(e) => setFilterTransMonth(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700 focus:outline-none">
+                        {/* Filters */}
+                        <div className="glass rounded-2xl p-3 space-y-2">
+                            <div className="grid grid-cols-2 gap-2">
+                                <select value={filterTransMonth} onChange={(e) => setFilterTransMonth(e.target.value)} className="text-[10px] p-2 rounded-xl input-premium truncate font-medium text-slate-700">
                                     <option value="all">📅 Semua Bulan</option>
                                     {MONTH_NAMES.map((name, idx) => <option key={idx} value={idx}>{name}</option>)}
                                 </select>
-                                <select value={filterTransYear} onChange={(e) => setFilterTransYear(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700 focus:outline-none">
+                                <select value={filterTransYear} onChange={(e) => setFilterTransYear(e.target.value)} className="text-[10px] p-2 rounded-xl input-premium truncate font-medium text-slate-700">
                                     <option value="all">🗓️ Semua Tahun</option>
                                     {AVAILABLE_YEARS.map(yr => <option key={yr} value={yr}>{yr}</option>)}
                                 </select>
                             </div>
-                            <div className="grid grid-cols-3 gap-1.5">
-                                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700 focus:outline-none">
+                            <div className="grid grid-cols-3 gap-2">
+                                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="text-[10px] p-2 rounded-xl input-premium truncate font-medium text-slate-700">
                                     <option value="all">🔄 Tipe</option>
                                     <option value="masuk">➕ Masuk</option>
                                     <option value="keluar">➖ Keluar</option>
                                 </select>
-                                <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700 focus:outline-none">
+                                <select value={filterMethod} onChange={(e) => setFilterMethod(e.target.value)} className="text-[10px] p-2 rounded-xl input-premium truncate font-medium text-slate-700">
                                     <option value="all">💳 Metode</option>
                                     <option value="tunai">💵 Tunai</option>
                                     <option value="qris">📱 QRIS</option>
                                 </select>
-                                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="text-[10px] p-1 border rounded-lg bg-gray-50 truncate font-medium text-gray-700 focus:outline-none">
+                                <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="text-[10px] p-2 rounded-xl input-premium truncate font-medium text-slate-700">
                                     <option value="all">📂 Kategori</option>
                                     {Object.entries(CATEGORIES).map(([k,v]) => <option key={k} value={k}>{v.name}</option>)}
                                 </select>
                             </div>
                         </div>
 
-                        <div className="bg-blue-50 p-2 rounded-xl border border-blue-100 shadow-sm flex justify-between items-center text-[10px]">
-                            <span className="font-bold text-blue-800">{filteredTransactions.length} Transaksi</span>
-                            <div className="flex gap-2">
-                                <span className="text-green-600 font-bold">+{formatRupiah(filteredTransactions.filter(t => t.type === 'masuk').reduce((sum, t) => sum + (parseInt(t.nominal)||0), 0))}</span>
-                                <span className="text-red-600 font-bold">-{formatRupiah(filteredTransactions.filter(t => t.type === 'keluar').reduce((sum, t) => sum + (parseInt(t.nominal)||0), 0))}</span>
+                        {/* Summary */}
+                        <div className="hero-gradient rounded-2xl p-3 shadow-lg flex justify-between items-center text-white relative overflow-hidden">
+                            <div className="relative z-10">
+                                <span className="text-[10px] text-blue-200 uppercase tracking-wider font-bold">📊 {filteredTransactions.length} Transaksi</span>
+                            </div>
+                            <div className="flex gap-3 relative z-10">
+                                <div className="text-right">
+                                    <p className="text-[8px] text-emerald-300 uppercase">Masuk</p>
+                                    <p className="text-xs font-bold text-emerald-200 num-display">+{formatRupiah(filteredTransactions.filter(t => t.type === 'masuk').reduce((sum, t) => sum + (parseInt(t.nominal)||0), 0))}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[8px] text-rose-300 uppercase">Keluar</p>
+                                    <p className="text-xs font-bold text-rose-200 num-display">-{formatRupiah(filteredTransactions.filter(t => t.type === 'keluar').reduce((sum, t) => sum + (parseInt(t.nominal)||0), 0))}</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="space-y-1.5">
+                        {/* Transactions List */}
+                        <div className="space-y-2">
                             {filteredTransactions.map(t => ( 
-                                <div key={t.id} className="bg-white p-2 rounded-xl border shadow-sm flex justify-between items-center"> 
-                                    <div>
-                                        <p className="font-bold text-xs text-gray-800">{t.ket}</p>
-                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                            <p className="text-[9px] text-gray-400">{t.date.split('T')[0]}</p>
-                                            <span className="text-[8px] font-mono px-1 bg-gray-100 text-gray-500 rounded">{t.method.toUpperCase()}</span>
-                                            {t.createdBy && <span className="text-[8px] font-mono px-1 bg-blue-50 text-blue-500 rounded">by: {t.createdBy}</span>}
+                                <div key={t.id} className="trans-row p-3 rounded-2xl flex justify-between items-center"> 
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm shadow-md flex-none ${t.type === 'masuk' ? 'bg-gradient-to-br from-emerald-400 to-emerald-600' : 'bg-gradient-to-br from-rose-400 to-rose-600'}`}>
+                                            {t.type === 'masuk' ? '↗' : '↘'}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="font-bold text-xs text-slate-800 truncate">{t.ket}</p>
+                                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                                <span className="text-[9px] font-mono text-slate-500">{t.date.split('T')[0]}</span>
+                                                <span className="text-[8px] font-mono px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded-md border border-slate-200">{t.method.toUpperCase()}</span>
+                                                {t.createdBy && <span className="text-[8px] font-mono px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-md border border-blue-100">by {t.createdBy}</span>}
+                                            </div>
                                         </div>
                                     </div> 
-                                    <div className="flex items-center gap-2"> 
-                                        <p className={`font-bold text-xs ${t.type === 'masuk' ? 'text-green-600' : 'text-red-600'}`}>{t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.nominal)}</p> 
+                                    <div className="flex items-center gap-2 flex-none"> 
+                                        <p className={`font-bold text-sm num-display ${t.type === 'masuk' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                            {t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.nominal)}
+                                        </p> 
                                         
                                         {isAdmin && (
-                                            <div className="flex gap-1 border-l border-gray-200 pl-2 ml-1">
-                                                <button onClick={() => { setEditTransData(t); setShowTransModal(true); }} className="text-blue-500 text-xs hover:text-blue-700" title="Edit">✎</button> 
-                                                <button onClick={() => handleDeleteTransaction(t.id)} className="text-red-400 text-xs hover:text-red-600" title="Hapus">✕</button> 
+                                            <div className="flex gap-0.5 border-l border-slate-200 pl-2 ml-1">
+                                                <button onClick={() => { setEditTransData(t); setShowTransModal(true); }} className="text-blue-500 text-xs hover:bg-blue-50 w-7 h-7 rounded-lg flex items-center justify-center transition" title="Edit">✎</button> 
+                                                <button onClick={() => handleDeleteTransaction(t.id)} className="text-rose-500 text-xs hover:bg-rose-50 w-7 h-7 rounded-lg flex items-center justify-center transition" title="Hapus">✕</button> 
                                             </div>
                                         )}
                                     </div> 
                                 </div> 
                             ))}
                             {filteredTransactions.length === 0 && (
-                                <p className="text-center text-xs text-gray-400 pt-4">Tidak ada riwayat transaksi</p>
+                                <div className="text-center py-8">
+                                    <div className="text-4xl mb-2 opacity-30">📋</div>
+                                    <p className="text-xs text-slate-400">Tidak ada riwayat transaksi</p>
+                                </div>
                             )}
                         </div>
                     </div> 
                 )} 
             </main>
 
-            {/* NAVIGASI BAWAH */}
-            <nav className="flex-none bg-white border-t border-gray-200 flex justify-around items-center p-2 pb-safe"> 
-                <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 w-20 py-1 transition-colors ${activeTab === 'home' ? 'text-blue-800' : 'text-gray-400 hover:text-gray-600'}`}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'home' ? 2.5 : 2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-                    <span className={`text-[10px] ${activeTab === 'home' ? 'font-bold' : 'font-medium'}`}>Beranda</span>
+            {/* BOTTOM NAVIGATION */}
+            <nav className="flex-none bottom-nav flex justify-around items-center p-2 pb-safe"> 
+                <button onClick={() => setActiveTab('home')} className={`nav-item flex flex-col items-center gap-1 w-20 py-2 rounded-xl ${activeTab === 'home' ? 'active' : ''}`}>
+                    <svg className={`nav-icon w-5 h-5 ${activeTab === 'home' ? 'text-blue-800' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'home' ? 2.5 : 2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span className={`nav-label text-[10px] ${activeTab === 'home' ? 'text-blue-800 font-bold' : 'text-slate-400 font-medium'}`}>Beranda</span>
                 </button> 
                 
-                <button onClick={() => loop} onClick={() => setActiveTab('warga')} className={`flex flex-col items-center gap-1 w-20 py-1 transition-colors ${activeTab === 'warga' ? 'text-blue-800' : 'text-gray-400 hover:text-gray-600'}`}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'warga' ? 2.5 : 2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <span className={`text-[10px] ${activeTab === 'warga' ? 'font-bold' : 'font-medium'}`}>Data Warga</span>
+                <button onClick={() => setActiveTab('warga')} className={`nav-item flex flex-col items-center gap-1 w-20 py-2 rounded-xl ${activeTab === 'warga' ? 'active' : ''}`}>
+                    <svg className={`nav-icon w-5 h-5 ${activeTab === 'warga' ? 'text-blue-800' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'warga' ? 2.5 : 2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span className={`nav-label text-[10px] ${activeTab === 'warga' ? 'text-blue-800 font-bold' : 'text-slate-400 font-medium'}`}>Data Warga</span>
                 </button> 
                 
-                <button onClick={() => setActiveTab('kas')} className={`flex flex-col items-center gap-1 w-20 py-1 transition-colors ${activeTab === 'kas' ? 'text-blue-800' : 'text-gray-400 hover:text-gray-600'}`}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'kas' ? 2.5 : 2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                    <span className={`text-[10px] ${activeTab === 'kas' ? 'font-bold' : 'font-medium'}`}>Uang Kas</span>
+                <button onClick={() => setActiveTab('kas')} className={`nav-item flex flex-col items-center gap-1 w-20 py-2 rounded-xl ${activeTab === 'kas' ? 'active' : ''}`}>
+                    <svg className={`nav-icon w-5 h-5 ${activeTab === 'kas' ? 'text-blue-800' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'kas' ? 2.5 : 2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    <span className={`nav-label text-[10px] ${activeTab === 'kas' ? 'text-blue-800 font-bold' : 'text-slate-400 font-medium'}`}>Uang Kas</span>
                 </button> 
             </nav> 
 
-            {/* MODAL LOGIN ADMIN */}
+            {/* LOGIN MODAL */}
             {showLoginModal && (
-                <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 backdrop-blur-sm"> 
-                    <div className="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl"> 
-                        <h3 className="font-bold text-lg text-center text-gray-800 mb-1">Login Admin</h3>
-                        <p className="text-center text-[10px] text-gray-500 mb-5">Masuk untuk menambah dan mengedit data</p>
+                <div className="fixed inset-0 modal-backdrop z-[70] flex items-center justify-center p-4"> 
+                    <div className="modal-content p-6 rounded-3xl w-full max-w-sm"> 
+                        <div className="text-center mb-5">
+                            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center text-white text-2xl shadow-lg mb-3">🔐</div>
+                            <h3 className="font-display font-bold text-xl text-slate-800">Login Admin</h3>
+                            <p className="text-[11px] text-slate-500 mt-1">Masuk untuk menambah dan mengedit data</p>
+                        </div>
                         
-                        {loginError && <p className="text-xs text-red-500 bg-red-50 p-2 rounded mb-3 text-center border border-red-100">{loginError}</p>}
+                        {loginError && <p className="text-xs text-rose-600 bg-rose-50 p-3 rounded-xl mb-4 text-center border border-rose-100 font-medium">⚠️ {loginError}</p>}
                         
                         <form onSubmit={handleLogin} className="space-y-3">
                             <div>
-                                <label className="text-[10px] font-bold text-gray-600 ml-1">Username</label>
-                                <input name="username" type="text" className="w-full mt-1 text-sm p-3 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required />
+                                <label className="text-[10px] font-bold text-slate-600 ml-1 uppercase tracking-wider">Username</label>
+                                <input name="username" type="text" className="w-full mt-1.5 text-sm p-3 rounded-xl input-premium" required />
                             </div>
                             <div>
-                                <label className="text-[10px] font-bold text-gray-600 ml-1">Password</label>
-                                <input name="password" type="password" className="w-full mt-1 text-sm p-3 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required />
+                                <label className="text-[10px] font-bold text-slate-600 ml-1 uppercase tracking-wider">Password</label>
+                                <input name="password" type="password" className="w-full mt-1.5 text-sm p-3 rounded-xl input-premium" required />
                             </div>
-                            <div className="flex gap-2 pt-3">
-                                <button type="button" onClick={() => { setShowLoginModal(false); setLoginError(''); }} className="flex-1 border border-gray-300 text-gray-600 p-3 rounded-xl text-xs font-bold hover:bg-gray-100 transition">Batal</button> 
-                                <button type="submit" className="flex-1 bg-blue-600 text-white p-3 rounded-xl text-xs font-bold hover:bg-blue-700 shadow-md transition">Login</button> 
+                            <div className="flex gap-2 pt-2">
+                                <button type="button" onClick={() => { setShowLoginModal(false); setLoginError(''); }} className="flex-1 border border-slate-200 text-slate-600 p-3 rounded-xl text-xs font-bold hover:bg-slate-50 transition">Batal</button> 
+                                <button type="submit" className="flex-1 btn-primary text-white p-3 rounded-xl text-xs font-bold shadow-lg">Login</button> 
                             </div>
                         </form>
                     </div> 
                 </div> 
             )}
 
-            {/* MODAL BAYAR */}
+            {/* PAYMENT MODAL */}
             {showPayModal.isOpen && isAdmin && (() => {
                 const c = showPayModal.citizen;
                 return (
-                    <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm"> 
-                        <div className="bg-white p-5 rounded-2xl w-full max-w-sm shadow-2xl"> 
-                            <h3 className="font-bold text-sm mb-1 text-center text-gray-800">Pembayaran Iuran</h3>
-                            <p className="text-center font-bold text-blue-600 text-xs mb-4">{c.name}</p>
+                    <div className="fixed inset-0 modal-backdrop z-[60] flex items-center justify-center p-4"> 
+                        <div className="modal-content p-6 rounded-3xl w-full max-w-sm"> 
+                            <div className="text-center mb-4">
+                                <div className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-white text-xl shadow-lg mb-3 ${payNominal === 25000 ? 'bg-gradient-to-br from-blue-500 to-blue-700' : 'bg-gradient-to-br from-amber-500 to-orange-600'}`}>💰</div>
+                                <h3 className="font-display font-bold text-lg text-slate-800">Pembayaran Iuran</h3>
+                                <p className="font-bold text-blue-600 text-sm mt-1">{c.name}</p>
+                            </div>
 
                             <div className="mb-4">
-                                <p className="text-[10px] font-bold mb-2 text-gray-600">Pilih Paket Iuran:</p>
+                                <p className="text-[10px] font-bold mb-2 text-slate-600 uppercase tracking-wider">Pilih Paket Iuran:</p>
                                 <div className="flex gap-2">
                                     <button 
                                         onClick={() => setPayNominal(25000)} 
-                                        className={`flex-1 p-2 rounded-lg text-[10px] font-bold border transition ${payNominal === 25000 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>
-                                        Rp 25.000<br/><span className="font-normal opacity-80">(Keamanan Saja)</span>
+                                        className={`flex-1 p-3 rounded-2xl text-[11px] font-bold border-2 transition ${payNominal === 25000 ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white border-blue-600 shadow-lg scale-105' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'}`}>
+                                        <div className="text-base font-display">Rp 25.000</div>
+                                        <span className="font-normal opacity-80 text-[9px] block mt-0.5">Keamanan</span>
                                     </button>
                                     
                                     <button 
                                         onClick={() => setPayNominal(50000)} 
-                                        className={`flex-1 p-2 rounded-lg text-[10px] font-bold border transition ${payNominal === 50000 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>
-                                        Rp 50.000<br/><span className="font-normal opacity-80">(Keamanan+Sampah)</span>
+                                        className={`flex-1 p-3 rounded-2xl text-[11px] font-bold border-2 transition ${payNominal === 50000 ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white border-amber-600 shadow-lg scale-105' : 'bg-white text-slate-600 border-slate-200 hover:border-amber-300'}`}>
+                                        <div className="text-base font-display">Rp 50.000</div>
+                                        <span className="font-normal opacity-80 text-[9px] block mt-0.5">Keamanan + Sampah</span>
                                     </button>
                                 </div>
                             </div>
 
                             <div className="mb-2">
-                                <p className="text-[10px] font-bold mb-2 text-gray-600">Pilih Metode Pembayaran:</p>
+                                <p className="text-[10px] font-bold mb-2 text-slate-600 uppercase tracking-wider">Metode Pembayaran:</p>
                                 <div className="grid grid-cols-2 gap-3"> 
-                                    <button onClick={() => handlePayDues('tunai', payNominal)} className="p-4 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded-xl font-bold text-sm transition shadow-sm">Tunai</button> 
-                                    <button onClick={() => handlePayDues('qris', payNominal)} className="p-4 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-xl font-bold text-sm transition shadow-sm">QRIS</button> 
+                                    <button onClick={() => handlePayDues('tunai', payNominal)} className="p-4 bg-gradient-to-br from-orange-100 to-amber-100 hover:from-orange-200 hover:to-amber-200 text-orange-800 rounded-2xl font-bold text-sm transition shadow-sm border border-orange-200">💵<br/>Tunai</button> 
+                                    <button onClick={() => handlePayDues('qris', payNominal)} className="p-4 bg-gradient-to-br from-blue-100 to-indigo-100 hover:from-blue-200 hover:to-indigo-200 text-blue-800 rounded-2xl font-bold text-sm transition shadow-sm border border-blue-200">📱<br/>QRIS</button> 
                                 </div> 
                             </div>
 
-                            <button onClick={() => { setShowPayModal({ isOpen: false, citizen: null }); setPayNominal(50000); }} className="w-full mt-4 text-gray-400 text-xs hover:text-gray-600 font-medium p-2">Batal</button> 
+                            <button onClick={() => { setShowPayModal({ isOpen: false, citizen: null }); setPayNominal(50000); }} className="w-full mt-4 text-slate-400 text-xs hover:text-slate-600 font-medium p-2 transition">Batal</button> 
                         </div> 
                     </div> 
                 );
             })()}
 
-            {/* MODAL TRANSAKSI */}
+            {/* TRANSACTION MODAL */}
             {showTransModal && isAdmin && ( 
-                <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm"> 
-                    <form key={editTransData ? editTransData.id : 'new'} onSubmit={handleSaveTransaction} className="bg-white p-5 rounded-2xl w-full max-w-sm space-y-3 shadow-2xl"> 
-                        <h3 className="font-bold text-sm text-gray-800 mb-2">{editTransData ? 'Edit Transaksi' : 'Transaksi Baru'}</h3> 
+                <div className="fixed inset-0 modal-backdrop z-[60] flex items-center justify-center p-4"> 
+                    <form key={editTransData ? editTransData.id : 'new'} onSubmit={handleSaveTransaction} className="modal-content p-6 rounded-3xl w-full max-w-sm space-y-3"> 
+                        <div className="text-center mb-2">
+                            <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-800 flex items-center justify-center text-white text-xl shadow-lg mb-2">
+                                {editTransData ? '✎' : '➕'}
+                            </div>
+                            <h3 className="font-display font-bold text-lg text-slate-800">{editTransData ? 'Edit Transaksi' : 'Transaksi Baru'}</h3>
+                        </div>
                         
-                        <input name="ket" defaultValue={editTransData?.ket || ''} placeholder="Keterangan" className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required /> 
-                        <input name="nom" type="number" defaultValue={editTransData?.nominal || ''} placeholder="Nominal" className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required /> 
-                        <input name="date" type="date" defaultValue={editTransData ? editTransData.date.split('T')[0] : localToday} className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition" required />
+                        <input name="ket" defaultValue={editTransData?.ket || ''} placeholder="Keterangan" className="w-full text-xs p-3 rounded-xl input-premium" required /> 
+                        <input name="nom" type="number" defaultValue={editTransData?.nominal || ''} placeholder="Nominal (Rp)" className="w-full text-xs p-3 rounded-xl input-premium" required /> 
+                        <input name="date" type="date" defaultValue={editTransData ? editTransData.date.split('T')[0] : localToday} className="w-full text-xs p-3 rounded-xl input-premium" required />
                         
                         <div className="grid grid-cols-2 gap-2">
-                            <select name="type" defaultValue={editTransData?.type || 'masuk'} className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="masuk">Pemasukan</option>
-                                <option value="keluar">Pengeluaran</option>
+                            <select name="type" defaultValue={editTransData?.type || 'masuk'} className="w-full text-xs p-3 rounded-xl input-premium">
+                                <option value="masuk">➕ Pemasukan</option>
+                                <option value="keluar">➖ Pengeluaran</option>
                             </select> 
-                            <select name="method" defaultValue={editTransData?.method || 'tunai'} className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="tunai">Tunai</option>
-                                <option value="qris">QRIS</option>
+                            <select name="method" defaultValue={editTransData?.method || 'tunai'} className="w-full text-xs p-3 rounded-xl input-premium">
+                                <option value="tunai">💵 Tunai</option>
+                                <option value="qris">📱 QRIS</option>
                             </select> 
                         </div>
-                        <select name="cat" defaultValue={editTransData?.category || 'kas_rt'} className="w-full text-xs p-2.5 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select name="cat" defaultValue={editTransData?.category || 'kas_rt'} className="w-full text-xs p-3 rounded-xl input-premium">
                             {Object.entries(CATEGORIES).map(([k,v]) => <option key={k} value={k}>{v.name}</option>)}
                         </select> 
                         
                         <div className="flex gap-2 pt-2">
-                            <button type="button" onClick={() => { setShowTransModal(false); setEditTransData(null); }} className="flex-1 border border-gray-300 text-gray-500 p-2.5 rounded-xl text-xs hover:bg-gray-100 font-medium transition">Batal</button> 
-                            <button type="submit" className="flex-1 bg-blue-800 text-white p-2.5 rounded-xl text-xs font-bold hover:bg-blue-900 shadow-md transition">Simpan</button> 
+                            <button type="button" onClick={() => { setShowTransModal(false); setEditTransData(null); }} className="flex-1 border border-slate-200 text-slate-500 p-3 rounded-xl text-xs hover:bg-slate-50 font-medium transition">Batal</button> 
+                            <button type="submit" className="flex-1 btn-primary text-white p-3 rounded-xl text-xs font-bold shadow-lg">💾 Simpan</button> 
                         </div>
                     </form> 
                 </div> 
