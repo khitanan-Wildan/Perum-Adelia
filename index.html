@@ -9,9 +9,28 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script> 
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- FIREBASE SDK COMPAT -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+    <style>
+        .marquee-container {
+            display: flex;
+            overflow: hidden;
+            white-space: nowrap;
+            flex: 1;
+            min-width: 0;
+            margin-right: 12px;
+        }
+        .marquee-content {
+            animation: marquee 12s linear infinite;
+            padding-left: 100%;
+            display: inline-block;
+        }
+        @keyframes marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+    </style>
 </head>
 <body class="bg-gray-100 text-gray-800 antialiased select-none"> 
     <div id="root"></div>
@@ -20,11 +39,11 @@
 const { useState, useEffect, useMemo, useRef } = React;
 
 // ==========================================
-// PENGATURAN AKUN ADMIN (Silakan ubah di sini)
+// PENGATURAN AKUN ADMIN
 // ==========================================
 const ADMIN_ACCOUNTS = [
-    { username: 'Iman', password: '071018' },
-    { username: 'Gangan', password: '111213' }
+    { username: 'admin1', password: '123' },
+    { username: 'admin2', password: '456' }
 ];
 
 // 1. KONFIGURASI FIREBASE ANDA
@@ -46,8 +65,6 @@ const database = firebase.database();
 // URL WEB APP DARI GOOGLE SCRIPT ANDA
 const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzGaZVTQoNML2G2Gi3gq4LgAtp20F-0rAVZDH5Xjz4MMym-0GqGxBSBAdRJhlc_FeiTYw/exec";
 
-const DUES_AMOUNT = 50000; 
-
 const CATEGORIES = { 
     kas_rt: { name: 'Uang Kas', amount: 50000, color: 'bg-blue-50 text-blue-800 border-blue-200' }
 };
@@ -57,7 +74,9 @@ const AVAILABLE_YEARS = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
 
 function App() { 
     // --- STATE LOGIN ADMIN ---
-    const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdminAdelia') === 'true');
+    const [adminUser, setAdminUser] = useState(localStorage.getItem('adminUserAdelia') || null);
+    const isAdmin = !!adminUser;
+
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [loginError, setLoginError] = useState('');
 
@@ -78,6 +97,8 @@ function App() {
     const [isSyncing, setIsSyncing] = useState(false);
     
     const [showPayModal, setShowPayModal] = useState({ isOpen: false, citizen: null }); 
+    const [payNominal, setPayNominal] = useState(50000); 
+
     const [showTransModal, setShowTransModal] = useState(false); 
     const [editTransData, setEditTransData] = useState(null); 
 
@@ -98,8 +119,8 @@ function App() {
         const isValid = ADMIN_ACCOUNTS.some(acc => acc.username === u && acc.password === p);
         
         if (isValid) {
-            setIsAdmin(true);
-            localStorage.setItem('isAdminAdelia', 'true');
+            setAdminUser(u);
+            localStorage.setItem('adminUserAdelia', u);
             setShowLoginModal(false);
             setLoginError('');
         } else {
@@ -109,8 +130,8 @@ function App() {
 
     const handleLogout = () => {
         if(window.confirm("Yakin ingin keluar dari mode Admin?")) {
-            setIsAdmin(false);
-            localStorage.removeItem('isAdminAdelia');
+            setAdminUser(null);
+            localStorage.removeItem('adminUserAdelia');
         }
     };
 
@@ -159,7 +180,7 @@ function App() {
                 if (t.method === 'tunai') cash += nom; else qris += nom; 
                 if (isCurrentMonth) income += nom; 
                 if (t.isDues) { 
-                    Object.keys(CATEGORIES).forEach(k => catBalances[k] += CATEGORIES[k].amount); 
+                    catBalances['kas_rt'] += nom; 
                 } else if (t.category && catBalances[t.category] !== undefined) { 
                     catBalances[t.category] += nom; 
                 } 
@@ -175,13 +196,17 @@ function App() {
         return { cash, qris, income, expense, allTimeIncome, allTimeExpense, catBalances, total: cash + qris }; 
     }, [transactions, activeMonth, activeYear]);
 
-    const isPaid = (cId) => transactions.some(t => {
-        if (!t.isDues || t.citizenId !== cId) return false;
-        if (t.duesMonth !== undefined && t.duesYear !== undefined) {
-            return t.duesMonth === activeMonth && t.duesYear === activeYear;
-        }
-        return new Date(t.date).getMonth() === activeMonth && new Date(t.date).getFullYear() === activeYear;
-    });
+    const getDuesTotalPaid = (cId) => {
+        return transactions.filter(t => {
+            if (!t.isDues || t.citizenId !== cId) return false;
+            if (t.duesMonth !== undefined && t.duesYear !== undefined) {
+                return t.duesMonth === activeMonth && t.duesYear === activeYear;
+            }
+            return new Date(t.date).getMonth() === activeMonth && new Date(t.date).getFullYear() === activeYear;
+        }).reduce((sum, t) => sum + (parseInt(t.nominal) || 0), 0);
+    };
+
+    const isPaid = (cId) => getDuesTotalPaid(cId) >= 25000;
 
     const duesProgress = useMemo(() => {
         const total = citizens.length;
@@ -190,14 +215,19 @@ function App() {
         return { total, paid, percent };
     }, [citizens, transactions, activeMonth, activeYear]);
 
-    const handlePayDues = (method) => { 
+    const handlePayDues = (method, nominal) => { 
         if(!isAdmin) return;
         const c = showPayModal.citizen; 
         const newId = Date.now();
+        
+        const ketText = nominal === 25000 
+            ? `Iuran ${MONTH_NAMES[activeMonth]} (Keamanan) - ${c.name}` 
+            : `Iuran ${MONTH_NAMES[activeMonth]} (Keamanan+Sampah) - ${c.name}`;
+
         const newT = { 
             id: newId, 
-            ket: `Iuran ${MONTH_NAMES[activeMonth]} - ${c.name}`, 
-            nominal: DUES_AMOUNT, 
+            ket: ketText, 
+            nominal: nominal, 
             category: 'kas_rt', 
             method, 
             type: 'masuk', 
@@ -205,11 +235,13 @@ function App() {
             citizenId: c.id, 
             isDues: true,
             duesMonth: activeMonth, 
-            duesYear: activeYear   
+            duesYear: activeYear,
+            createdBy: adminUser // Menyimpan info admin yang menginput
         }; 
         
         database.ref('transactions/' + newId).set(newT);
         setShowPayModal({ isOpen: false, citizen: null }); 
+        setPayNominal(50000); 
     };
 
     const handleSaveTransaction = (e) => { 
@@ -234,7 +266,7 @@ function App() {
             database.ref('transactions/' + editTransData.id).update(newTData);
         } else {
             const newId = Date.now();
-            database.ref('transactions/' + newId).set({ id: newId, isDues: false, ...newTData });
+            database.ref('transactions/' + newId).set({ id: newId, isDues: false, createdBy: adminUser, ...newTData });
         }
         
         setShowTransModal(false); 
@@ -257,9 +289,8 @@ function App() {
 
             transactions.forEach(t => {
                 if (t.isDues && t.citizenId === citizen.id) {
-                    const monthPart = t.ket.split(' - ')[0];
                     database.ref('transactions/' + t.id).update({
-                        ket: `${monthPart} - ${newName.trim()}`
+                        ket: `${t.ket.substring(0, t.ket.lastIndexOf('-'))}- ${newName.trim()}`
                     });
                 }
             });
@@ -289,12 +320,12 @@ function App() {
             database.ref('citizens/' + newId).set({
                 id: newId,
                 name: name.trim(),
-                block: block.trim()
+                block: block.trim(),
+                createdBy: adminUser // Menyimpan info admin yang menginput warga
             });
         }
     };
 
-    // FITUR PENGIRIMAN KE GOOGLE SHEETS
     const handleSyncToSheets = () => {
         if(!isAdmin) return;
         if(!window.confirm("Kirim seluruh data riwayat transaksi ini ke Google Sheets? (Data di file Sheets akan diperbarui)")) return;
@@ -332,10 +363,11 @@ function App() {
                                   c.block.toLowerCase().includes(searchTerm.toLowerCase());
             
             let matchesStatus = true;
+            const paidAmount = getDuesTotalPaid(c.id);
             if (filterStatus === 'lunas') {
-                matchesStatus = isPaid(c.id);
+                matchesStatus = paidAmount >= 25000;
             } else if (filterStatus === 'belum') {
-                matchesStatus = !isPaid(c.id);
+                matchesStatus = paidAmount < 25000;
             }
             
             return matchesSearch && matchesStatus;
@@ -363,25 +395,24 @@ function App() {
 
     return ( 
         <div className="max-w-md mx-auto h-screen flex flex-col bg-gray-50 shadow-xl border-x border-gray-200 relative"> 
-            
-            {/* Indikator Mode Admin */}
-            {isAdmin && (
-                <div className="bg-emerald-500 text-white text-[8px] text-center py-0.5 font-bold uppercase tracking-wider">
-                    🛠️ Mode Admin Aktif - Akses Penuh
-                </div>
-            )}
 
             <header className="bg-blue-800 text-white p-3 shadow-md flex-none flex justify-between items-center sticky top-0 z-50"> 
-                <h1 className="text-xs font-bold tracking-wider truncate">PERUM. ADELIA</h1> 
-                <div className="flex items-center gap-2">
-                    <span className="text-[10px] bg-blue-700 px-2 py-0.5 rounded font-mono flex items-center">
+                
+                {/* HEADER TEKS BERJALAN (MARQUEE) */}
+                <div className="marquee-container">
+                    <h1 className="marquee-content text-xs font-bold tracking-wider uppercase">
+                        Green Adelia Residance RT 70 RW 02
+                    </h1> 
+                </div>
+
+                <div className="flex items-center gap-2 flex-none">
+                    <span className="text-[10px] bg-blue-700 px-2 py-0.5 rounded font-mono flex items-center shadow-inner">
                         <span className="inline-block w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5 animate-pulse"></span>
                         {MONTH_NAMES[activeMonth].substring(0,3)} {activeYear}
                     </span>
                     
-                    {/* Tombol Login / Logout */}
                     {isAdmin ? (
-                        <button onClick={handleLogout} className="text-[10px] bg-red-500 hover:bg-red-600 px-2 py-1 rounded shadow-sm">Logout</button>
+                        <button onClick={handleLogout} className="text-[10px] bg-red-500 hover:bg-red-600 px-2 py-1 rounded shadow-sm">Logout ({adminUser})</button>
                     ) : (
                         <button onClick={() => setShowLoginModal(true)} className="text-[10px] bg-blue-600 hover:bg-blue-500 border border-blue-400 px-2 py-1 rounded shadow-sm">Login</button>
                     )}
@@ -424,13 +455,13 @@ function App() {
                             </div> 
 
                             <div className="pt-1 border-t border-blue-600/30 space-y-1">
-                                <div className="text-[9px] text-blue-200 font-medium">📊 Partisipasi Iuran Warga</div>
+                                <div className="text-[9px] text-blue-200 font-medium">📊 Warga Lunas (Iuran)</div>
                                 <div className="w-full bg-blue-950/40 rounded-full h-1 overflow-hidden">
                                     <div className="bg-gradient-to-r from-teal-400 to-emerald-400 h-1 rounded-full" style={{ width: `${duesProgress.percent}%` }}></div>
                                 </div>
                                 <div className="flex justify-between items-center text-[9px] text-blue-200 pt-0.5">
-                                    <span>Sudah Bayar: <strong className="text-white">{duesProgress.paid}</strong> dari <strong className="text-white">{duesProgress.total} Warga</strong></span>
-                                    <span className="font-mono font-bold text-emerald-300 bg-blue-950/50 px-1 rounded text-[8px]">{duesProgress.percent}% Lunas</span>
+                                    <span>Sudah Lunas: <strong className="text-white">{duesProgress.paid}</strong> dari <strong className="text-white">{duesProgress.total} Warga</strong></span>
+                                    <span className="font-mono font-bold text-emerald-300 bg-blue-950/50 px-1 rounded text-[8px]">{duesProgress.percent}%</span>
                                 </div>
                             </div>
                         </div> 
@@ -457,7 +488,7 @@ function App() {
                             </div> 
                         </div>
 
-                        {/* TABEL TAMBAHAN UNTUK MENGISI RUANG KOSONG */}
+                        {/* TABEL TERMASUK NAMA INPUT KECIL DI BAWAHNYA */}
                         <div className="bg-white rounded-xl border shadow-sm overflow-hidden mt-1">
                             <div className="bg-gray-50 px-2.5 py-2 border-b flex justify-between items-center">
                                 <h3 className="text-[10px] font-bold text-gray-700 uppercase">Riwayat Terakhir</h3>
@@ -476,7 +507,10 @@ function App() {
                                         {transactions.slice(0, 5).map(t => (
                                             <tr key={t.id} className="border-b last:border-b-0 hover:bg-gray-50">
                                                 <td className="px-2.5 py-2 text-[9px] whitespace-nowrap text-gray-500">{t.date.split('T')[0]}</td>
-                                                <td className="px-2.5 py-2 text-[9px] text-gray-800 truncate max-w-[120px]">{t.ket}</td>
+                                                <td className="px-2.5 py-2 text-[9px] text-gray-800 max-w-[120px]">
+                                                    <div className="truncate font-medium">{t.ket}</div>
+                                                    {t.createdBy && <div className="text-[7px] text-gray-400 font-mono scale-95 origin-left">by: {t.createdBy}</div>}
+                                                </td>
                                                 <td className={`px-2.5 py-2 text-[9px] font-bold text-right whitespace-nowrap ${t.type === 'masuk' ? 'text-green-600' : 'text-red-600'}`}>
                                                     {t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.nominal)}
                                                 </td>
@@ -503,7 +537,6 @@ function App() {
                             <button onClick={() => { setActiveMonth(activeMonth === 11 ? 0 : activeMonth + 1); if(activeMonth === 11) setActiveYear(activeYear + 1); }} className="p-1 hover:bg-gray-100 rounded-lg text-xs font-bold">&gt;</button> 
                         </div> 
                         
-                        {/* HANYA ADMIN YANG BISA NAMBAH WARGA */}
                         {isAdmin && (
                             <button onClick={handleAddCitizen} className="w-full p-2 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-sm hover:bg-blue-700">+ Tambah Warga Baru</button> 
                         )}
@@ -531,14 +564,20 @@ function App() {
                             {filteredCitizens.length === 0 && (
                                 <p className="text-center text-xs text-gray-400 pt-4">Data warga tidak ditemukan.</p>
                             )}
-                            {filteredCitizens.map(c => ( 
+                            {filteredCitizens.map(c => {
+                                const paidAmount = getDuesTotalPaid(c.id);
+                                const isLunas = paidAmount >= 25000;
+
+                                return ( 
                                 <div key={c.id} className="bg-white p-2 rounded-xl border shadow-sm flex justify-between items-center"> 
                                     <div>
                                         <p className="font-bold text-xs text-gray-800">{c.name}</p>
-                                        <p className="text-[9px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded mt-0.5 inline-block">{c.block}</p>
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                            <p className="text-[9px] font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded inline-block">{c.block}</p>
+                                            {c.createdBy && <span className="text-[7px] text-gray-400 font-mono">by: {c.createdBy}</span>}
+                                        </div>
                                     </div> 
                                     <div className="flex gap-1 items-center"> 
-                                        {/* HANYA ADMIN YANG BISA EDIT/HAPUS */}
                                         {isAdmin && (
                                             <>
                                                 <button onClick={() => handleEditCitizen(c)} className="text-blue-600 text-[10px] px-1 font-medium">Edit</button> 
@@ -546,27 +585,31 @@ function App() {
                                             </>
                                         )}
                                         
-                                        {/* TOMBOL BAYAR JUGA HANYA ADMIN */}
-                                        {isPaid(c.id) ? (
-                                            <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold ml-1 border border-green-200">Lunas</span>
+                                        {isLunas ? (
+                                            <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold ml-1 border border-green-200">
+                                                Lunas {paidAmount === 25000 ? '(Keamanan)' : '(Semua)'}
+                                            </span>
                                         ) : (
-                                            isAdmin ? (
-                                                <button onClick={() => setShowPayModal({ isOpen: true, citizen: c })} className="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold ml-1 shadow-sm">Bayar</button>
-                                            ) : (
-                                                <span className="text-[9px] bg-red-50 text-red-500 px-2 py-0.5 rounded font-bold ml-1 border border-red-100">Belum</span>
-                                            )
+                                            <div className="flex items-center">
+                                                {!isAdmin && <span className="text-[9px] bg-red-50 text-red-500 px-2 py-0.5 rounded font-bold ml-1 border border-red-100">Belum</span>}
+                                                {isAdmin && (
+                                                    <button onClick={() => {
+                                                        setPayNominal(50000); 
+                                                        setShowPayModal({ isOpen: true, citizen: c });
+                                                    }} className="text-[9px] bg-blue-600 text-white px-2 py-0.5 rounded font-bold ml-1 shadow-sm">Bayar</button>
+                                                )}
+                                            </div>
                                         )} 
                                     </div> 
                                 </div> 
-                            ))}
+                                )
+                            })}
                         </div>
                     </div> 
                 )}
 
                 {activeTab === 'kas' && ( 
                     <div className="flex flex-col space-y-2"> 
-                        
-                        {/* HANYA ADMIN YANG BISA NAMBAH TRANSAKSI ATAU KIRIM KE SHEETS */}
                         {isAdmin && (
                             <div className="flex gap-2">
                                 <button onClick={() => { setEditTransData(null); setShowTransModal(true); }} className="flex-1 bg-blue-800 text-white p-2 rounded-xl font-bold text-xs shadow-md hover:bg-blue-900">+ Transaksi Baru</button> 
@@ -619,15 +662,15 @@ function App() {
                                 <div key={t.id} className="bg-white p-2 rounded-xl border shadow-sm flex justify-between items-center"> 
                                     <div>
                                         <p className="font-bold text-xs text-gray-800">{t.ket}</p>
-                                        <div className="flex items-center gap-1 mt-0.5">
+                                        <div className="flex items-center gap-1.5 mt-0.5">
                                             <p className="text-[9px] text-gray-400">{t.date.split('T')[0]}</p>
                                             <span className="text-[8px] font-mono px-1 bg-gray-100 text-gray-500 rounded">{t.method.toUpperCase()}</span>
+                                            {t.createdBy && <span className="text-[8px] font-mono px-1 bg-blue-50 text-blue-500 rounded">by: {t.createdBy}</span>}
                                         </div>
                                     </div> 
                                     <div className="flex items-center gap-2"> 
                                         <p className={`font-bold text-xs ${t.type === 'masuk' ? 'text-green-600' : 'text-red-600'}`}>{t.type === 'masuk' ? '+' : '-'}{formatRupiah(t.nominal)}</p> 
                                         
-                                        {/* HANYA ADMIN YANG BISA EDIT/HAPUS TRANSAKSI */}
                                         {isAdmin && (
                                             <div className="flex gap-1 border-l border-gray-200 pl-2 ml-1">
                                                 <button onClick={() => { setEditTransData(t); setShowTransModal(true); }} className="text-blue-500 text-xs hover:text-blue-700" title="Edit">✎</button> 
@@ -645,26 +688,20 @@ function App() {
                 )} 
             </main>
 
-            {/* NAVIGASI BAWAH DENGAN IKON */}
+            {/* NAVIGASI BAWAH */}
             <nav className="flex-none bg-white border-t border-gray-200 flex justify-around items-center p-2 pb-safe"> 
                 <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center gap-1 w-20 py-1 transition-colors ${activeTab === 'home' ? 'text-blue-800' : 'text-gray-400 hover:text-gray-600'}`}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'home' ? 2.5 : 2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                    </svg>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'home' ? 2.5 : 2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                     <span className={`text-[10px] ${activeTab === 'home' ? 'font-bold' : 'font-medium'}`}>Beranda</span>
                 </button> 
                 
-                <button onClick={() => setActiveTab('warga')} className={`flex flex-col items-center gap-1 w-20 py-1 transition-colors ${activeTab === 'warga' ? 'text-blue-800' : 'text-gray-400 hover:text-gray-600'}`}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'warga' ? 2.5 : 2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
+                <button onClick={() => loop} onClick={() => setActiveTab('warga')} className={`flex flex-col items-center gap-1 w-20 py-1 transition-colors ${activeTab === 'warga' ? 'text-blue-800' : 'text-gray-400 hover:text-gray-600'}`}>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'warga' ? 2.5 : 2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     <span className={`text-[10px] ${activeTab === 'warga' ? 'font-bold' : 'font-medium'}`}>Data Warga</span>
                 </button> 
                 
                 <button onClick={() => setActiveTab('kas')} className={`flex flex-col items-center gap-1 w-20 py-1 transition-colors ${activeTab === 'kas' ? 'text-blue-800' : 'text-gray-400 hover:text-gray-600'}`}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'kas' ? 2.5 : 2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                    </svg>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={activeTab === 'kas' ? 2.5 : 2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                     <span className={`text-[10px] ${activeTab === 'kas' ? 'font-bold' : 'font-medium'}`}>Uang Kas</span>
                 </button> 
             </nav> 
@@ -697,18 +734,44 @@ function App() {
             )}
 
             {/* MODAL BAYAR */}
-            {showPayModal.isOpen && isAdmin && ( 
-                <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm"> 
-                    <div className="bg-white p-5 rounded-2xl w-full max-w-sm shadow-2xl"> 
-                        <h3 className="font-bold text-sm mb-4 text-center text-gray-800">Pilih Metode Pembayaran</h3>
-                        <div className="grid grid-cols-2 gap-3"> 
-                            <button onClick={() => handlePayDues('tunai')} className="p-4 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded-xl font-bold text-sm transition shadow-sm">Tunai</button> 
-                            <button onClick={() => handlePayDues('qris')} className="p-4 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-xl font-bold text-sm transition shadow-sm">QRIS</button> 
+            {showPayModal.isOpen && isAdmin && (() => {
+                const c = showPayModal.citizen;
+                return (
+                    <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 backdrop-blur-sm"> 
+                        <div className="bg-white p-5 rounded-2xl w-full max-w-sm shadow-2xl"> 
+                            <h3 className="font-bold text-sm mb-1 text-center text-gray-800">Pembayaran Iuran</h3>
+                            <p className="text-center font-bold text-blue-600 text-xs mb-4">{c.name}</p>
+
+                            <div className="mb-4">
+                                <p className="text-[10px] font-bold mb-2 text-gray-600">Pilih Paket Iuran:</p>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => setPayNominal(25000)} 
+                                        className={`flex-1 p-2 rounded-lg text-[10px] font-bold border transition ${payNominal === 25000 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>
+                                        Rp 25.000<br/><span className="font-normal opacity-80">(Keamanan Saja)</span>
+                                    </button>
+                                    
+                                    <button 
+                                        onClick={() => setPayNominal(50000)} 
+                                        className={`flex-1 p-2 rounded-lg text-[10px] font-bold border transition ${payNominal === 50000 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>
+                                        Rp 50.000<br/><span className="font-normal opacity-80">(Keamanan+Sampah)</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="mb-2">
+                                <p className="text-[10px] font-bold mb-2 text-gray-600">Pilih Metode Pembayaran:</p>
+                                <div className="grid grid-cols-2 gap-3"> 
+                                    <button onClick={() => handlePayDues('tunai', payNominal)} className="p-4 bg-orange-100 hover:bg-orange-200 text-orange-800 rounded-xl font-bold text-sm transition shadow-sm">Tunai</button> 
+                                    <button onClick={() => handlePayDues('qris', payNominal)} className="p-4 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-xl font-bold text-sm transition shadow-sm">QRIS</button> 
+                                </div> 
+                            </div>
+
+                            <button onClick={() => { setShowPayModal({ isOpen: false, citizen: null }); setPayNominal(50000); }} className="w-full mt-4 text-gray-400 text-xs hover:text-gray-600 font-medium p-2">Batal</button> 
                         </div> 
-                        <button onClick={() => setShowPayModal({ isOpen: false, citizen: null })} className="w-full mt-4 text-gray-400 text-xs hover:text-gray-600 font-medium p-2">Batal</button> 
                     </div> 
-                </div> 
-            )}
+                );
+            })()}
 
             {/* MODAL TRANSAKSI */}
             {showTransModal && isAdmin && ( 
