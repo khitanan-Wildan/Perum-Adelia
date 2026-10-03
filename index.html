@@ -428,6 +428,9 @@ function App() {
 
     const [showTransModal, setShowTransModal] = useState(false); 
     const [editTransData, setEditTransData] = useState(null); 
+    
+    // PENAMBAHAN: State untuk Custom Delete Modal
+    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null, type: null });
 
     const localToday = useMemo(() => {
         const today = new Date();
@@ -622,18 +625,26 @@ function App() {
         }
     };
 
+    // PENAMBAHAN: Custom Alert Trigger untuk Citizen
     const handleDeleteCitizen = (id) => {
         if(!isAdmin) return;
-        if(window.confirm("Apakah Anda yakin ingin menghapus data warga ini?")) {
-            database.ref('citizens/' + id).remove();
-        }
+        setConfirmDelete({ isOpen: true, id: id, type: 'citizen' });
     };
 
+    // PENAMBAHAN: Custom Alert Trigger untuk Transaction
     const handleDeleteTransaction = (id) => {
         if(!isAdmin) return;
-        if(window.confirm("Apakah Anda yakin ingin menghapus riwayat transaksi ini?")) {
-            database.ref('transactions/' + id).remove();
+        setConfirmDelete({ isOpen: true, id: id, type: 'transaction' });
+    };
+
+    // PENAMBAHAN: Fungsi Eksekusi Hapus yang Terhubung ke Modal
+    const executeDelete = () => {
+        if (confirmDelete.type === 'transaction') {
+            database.ref('transactions/' + confirmDelete.id).remove();
+        } else if (confirmDelete.type === 'citizen') {
+            database.ref('citizens/' + confirmDelete.id).remove();
         }
+        setConfirmDelete({ isOpen: false, id: null, type: null });
     };
 
     const handleAddCitizen = () => {
@@ -1241,6 +1252,30 @@ function App() {
                             <button type="submit" className="flex-1 btn-primary text-white p-3 rounded-xl text-xs font-bold shadow-lg">💾 Simpan</button> 
                         </div>
                     </form> 
+                </div> 
+            )}
+
+            {/* DELETE CONFIRMATION MODAL */}
+            {confirmDelete.isOpen && isAdmin && (
+                <div className="fixed inset-0 modal-backdrop z-[80] flex items-center justify-center p-4"> 
+                    <div className="modal-content p-6 rounded-3xl w-full max-w-xs text-center"> 
+                        <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center text-white text-2xl shadow-lg mb-3">⚠️</div>
+                        <h3 className="font-display font-bold text-lg text-slate-800">Konfirmasi Hapus</h3>
+                        <p className="text-xs text-slate-500 mt-2 mb-4">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.</p>
+                        
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => setConfirmDelete({ isOpen: false, id: null, type: null })} 
+                                className="flex-1 border border-slate-200 text-slate-600 p-3 rounded-xl text-xs font-bold hover:bg-slate-50 transition">
+                                Batal
+                            </button> 
+                            <button 
+                                onClick={executeDelete} 
+                                className="flex-1 bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white p-3 rounded-xl text-xs font-bold shadow-lg">
+                                Ya, Hapus
+                            </button> 
+                        </div>
+                    </div> 
                 </div> 
             )}
         </div> 
