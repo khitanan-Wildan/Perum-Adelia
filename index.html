@@ -142,7 +142,6 @@
                 0 8px 20px rgba(30, 64, 175, 0.4),
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
-        .btn-primary:active { transform: translateY(0); }
 
         .btn-gold {
             background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
@@ -152,12 +151,6 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.4);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .btn-gold:hover {
-            transform: translateY(-1px);
-            box-shadow: 
-                0 8px 20px rgba(245, 158, 11, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.5);
-        }
 
         .btn-emerald {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -166,17 +159,6 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.2);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .btn-emerald:hover {
-            transform: translateY(-1px);
-            box-shadow: 
-                0 8px 20px rgba(16, 185, 129, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        }
-
-        /* Glow effects */
-        .glow-gold { box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
-        .glow-emerald { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
 
         /* Progress bar */
         .progress-track {
@@ -248,12 +230,6 @@
             background: #ffffff;
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.3); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.5); }
-
         /* Stat card */
         .stat-card {
             position: relative;
@@ -293,18 +269,26 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* Citizen row */
-        .citizen-row {
+        /* Toast Animation */
+        .toast-animate {
+            animation: slideDownToast 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes slideDownToast {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+
+        /* Rows */
+        .citizen-row, .trans-row {
             background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
             border: 1px solid rgba(15, 23, 42, 0.05);
             transition: all 0.2s ease;
         }
-        .citizen-row:hover {
+        .citizen-row:hover, .trans-row:hover {
             border-color: rgba(59, 130, 246, 0.2);
             box-shadow: 0 4px 16px rgba(59, 130, 246, 0.08);
         }
 
-        /* Pulse dot */
         .pulse-dot {
             position: relative;
         }
@@ -322,7 +306,6 @@
             50% { opacity: 0; transform: scale(2); }
         }
 
-        /* Category card */
         .category-card {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
             backdrop-filter: blur(10px);
@@ -337,25 +320,12 @@
             background: linear-gradient(90deg, #3b82f6, #8b5cf6);
         }
 
-        /* Transaction row */
-        .trans-row {
-            background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
-            border: 1px solid rgba(15, 23, 42, 0.05);
-            transition: all 0.2s ease;
-        }
-        .trans-row:hover {
-            border-color: rgba(59, 130, 246, 0.15);
-            transform: translateX(2px);
-        }
-
-        /* Number display */
         .num-display {
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
             letter-spacing: -0.02em;
         }
 
-        /* Safe area */
         .pb-safe { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
         .pt-safe { padding-top: max(0.5rem, env(safe-area-inset-top)); }
     </style>
@@ -366,15 +336,11 @@
 <script type="text/babel"> 
 const { useState, useEffect, useMemo, useRef } = React;
 
-// ==========================================
-// PENGATURAN AKUN ADMIN
-// ==========================================
 const ADMIN_ACCOUNTS = [
     { username: 'Gangan', password: '111213' },
     { username: 'Iman', password: '07102018' }
 ];
 
-// 1. KONFIGURASI FIREBASE ANDA
 const firebaseConfig = {
   apiKey: "AIzaSyDAf69gpgH3I9pPUMXbuLBvPx-ig-pXuvI",
   authDomain: "perum-adelia.firebaseapp.com",
@@ -386,11 +352,9 @@ const firebaseConfig = {
   measurementId: "G-PY2ZP4ECFB"
 };
 
-// 2. INISIALISASI FIREBASE
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
-// URL WEB APP DARI GOOGLE SCRIPT ANDA
 const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwBw1oqQylhRH-YEL5zdlvLizlw_H_YeehjoJwxhmmGf-eW12Hf7RewrNxqMqaEh3w92w/exec";
 
 const CATEGORIES = { 
@@ -429,8 +393,17 @@ function App() {
     const [showTransModal, setShowTransModal] = useState(false); 
     const [editTransData, setEditTransData] = useState(null); 
     
-    // PENAMBAHAN: State untuk Custom Delete Modal
-    const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, id: null, type: null });
+    // CUSTOM TOAST & MODAL STATES (Pengganti alert, prompt, confirm)
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [dialog, setDialog] = useState({
+        isOpen: false, type: 'confirm', title: '', message: '', 
+        inputs: [], onConfirm: null, confirmText: 'Ya', confirmStyle: 'btn-primary'
+    });
+
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
+    };
 
     const localToday = useMemo(() => {
         const today = new Date();
@@ -446,22 +419,32 @@ function App() {
         const p = e.target.password.value;
         
         const isValid = ADMIN_ACCOUNTS.some(acc => acc.username === u && acc.password === p);
-        
         if (isValid) {
             setAdminUser(u);
             localStorage.setItem('adminUserAdelia', u);
             setShowLoginModal(false);
             setLoginError('');
+            showToast(`Selamat datang, Admin ${u}!`);
         } else {
             setLoginError('Username atau password salah!');
         }
     };
 
     const handleLogout = () => {
-        if(window.confirm("Yakin ingin keluar dari mode Admin?")) {
-            setAdminUser(null);
-            localStorage.removeItem('adminUserAdelia');
-        }
+        setDialog({
+            isOpen: true,
+            type: 'confirm',
+            title: 'Konfirmasi Keluar',
+            message: 'Yakin ingin keluar dari mode Admin?',
+            confirmText: 'Ya, Keluar',
+            confirmStyle: 'bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700',
+            onConfirm: () => {
+                setAdminUser(null);
+                localStorage.removeItem('adminUserAdelia');
+                setDialog({ isOpen: false });
+                showToast('Berhasil keluar dari mode Admin');
+            }
+        });
     };
 
     useEffect(() => { 
@@ -547,10 +530,7 @@ function App() {
         if(!isAdmin) return;
         const c = showPayModal.citizen; 
         const newId = Date.now();
-        
-        const ketText = nominal === 25000 
-            ? `${c.name}` 
-            : `${c.name}`;
+        const ketText = `${c.name}`;
 
         const newT = { 
             id: newId, 
@@ -570,6 +550,7 @@ function App() {
         database.ref('transactions/' + newId).set(newT);
         setShowPayModal({ isOpen: false, citizen: null }); 
         setPayNominal(50000); 
+        showToast('Pembayaran berhasil dicatat');
     };
 
     const handleSaveTransaction = (e) => { 
@@ -592,104 +573,154 @@ function App() {
 
         if (editTransData) {
             database.ref('transactions/' + editTransData.id).update(newTData);
+            showToast('Transaksi berhasil diperbarui');
         } else {
             const newId = Date.now();
             database.ref('transactions/' + newId).set({ id: newId, isDues: false, createdBy: adminUser, ...newTData });
+            showToast('Transaksi berhasil ditambahkan');
         }
         
         setShowTransModal(false); 
         setEditTransData(null);
     };
 
-    const handleEditCitizen = (citizen) => {
-        if(!isAdmin) return;
-        const newName = prompt("Ubah Nama Warga:", citizen.name);
-        if (newName === null) return; 
-        
-        const newBlock = prompt("Ubah Blok Rumah:", citizen.block);
-        if (newBlock === null) return; 
-
-        if (newName.trim() && newBlock.trim()) {
-            database.ref('citizens/' + citizen.id).update({ 
-                name: newName.trim(), 
-                block: newBlock.trim() 
-            });
-
-            transactions.forEach(t => {
-                if (t.isDues && t.citizenId === citizen.id) {
-                    database.ref('transactions/' + t.id).update({
-                        ket: `${t.ket.substring(0, t.ket.lastIndexOf('-'))}- ${newName.trim()}`
-                    });
-                }
-            });
-        }
-    };
-
-    // PENAMBAHAN: Custom Alert Trigger untuk Citizen
-    const handleDeleteCitizen = (id) => {
-        if(!isAdmin) return;
-        setConfirmDelete({ isOpen: true, id: id, type: 'citizen' });
-    };
-
-    // PENAMBAHAN: Custom Alert Trigger untuk Transaction
-    const handleDeleteTransaction = (id) => {
-        if(!isAdmin) return;
-        setConfirmDelete({ isOpen: true, id: id, type: 'transaction' });
-    };
-
-    // PENAMBAHAN: Fungsi Eksekusi Hapus yang Terhubung ke Modal
-    const executeDelete = () => {
-        if (confirmDelete.type === 'transaction') {
-            database.ref('transactions/' + confirmDelete.id).remove();
-        } else if (confirmDelete.type === 'citizen') {
-            database.ref('citizens/' + confirmDelete.id).remove();
-        }
-        setConfirmDelete({ isOpen: false, id: null, type: null });
-    };
-
     const handleAddCitizen = () => {
         if(!isAdmin) return;
-        const name = prompt("Nama Warga"); 
-        const block = prompt("Blok"); 
-        if(name && block) {
-            const newId = Date.now();
-            database.ref('citizens/' + newId).set({
-                id: newId,
-                name: name.trim(),
-                block: block.trim(),
-                createdBy: adminUser
-            });
-        }
+        setDialog({
+            isOpen: true,
+            type: 'prompt',
+            title: 'Tambah Warga Baru',
+            inputs: [
+                { name: 'name', label: 'Nama Warga', value: '' },
+                { name: 'block', label: 'Blok Rumah', value: '' }
+            ],
+            confirmText: 'Simpan',
+            confirmStyle: 'btn-primary',
+            onConfirm: (data) => {
+                if(data.name && data.block) {
+                    const newId = Date.now();
+                    database.ref('citizens/' + newId).set({
+                        id: newId,
+                        name: data.name.trim(),
+                        block: data.block.trim(),
+                        createdBy: adminUser
+                    });
+                    setDialog({ isOpen: false });
+                    showToast('Warga baru berhasil ditambahkan');
+                } else {
+                    showToast('Harap isi semua kolom!', 'error');
+                }
+            }
+        });
+    };
+
+    const handleEditCitizen = (citizen) => {
+        if(!isAdmin) return;
+        setDialog({
+            isOpen: true,
+            type: 'prompt',
+            title: 'Edit Data Warga',
+            inputs: [
+                { name: 'name', label: 'Nama Warga', value: citizen.name },
+                { name: 'block', label: 'Blok Rumah', value: citizen.block }
+            ],
+            confirmText: 'Simpan Perubahan',
+            confirmStyle: 'btn-primary',
+            onConfirm: (data) => {
+                if (data.name.trim() && data.block.trim()) {
+                    database.ref('citizens/' + citizen.id).update({ 
+                        name: data.name.trim(), 
+                        block: data.block.trim() 
+                    });
+
+                    transactions.forEach(t => {
+                        if (t.isDues && t.citizenId === citizen.id) {
+                            database.ref('transactions/' + t.id).update({
+                                ket: `${t.ket.substring(0, t.ket.lastIndexOf('-'))}- ${data.name.trim()}`
+                            });
+                        }
+                    });
+                    setDialog({ isOpen: false });
+                    showToast('Data warga berhasil diperbarui');
+                } else {
+                    showToast('Harap isi semua kolom!', 'error');
+                }
+            }
+        });
+    };
+
+    const handleDeleteCitizen = (id) => {
+        if(!isAdmin) return;
+        setDialog({
+            isOpen: true,
+            type: 'confirm',
+            title: 'Konfirmasi Hapus',
+            message: 'Apakah Anda yakin ingin menghapus data warga ini? Tindakan ini tidak dapat dibatalkan.',
+            confirmText: 'Ya, Hapus',
+            confirmStyle: 'bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700',
+            onConfirm: () => {
+                database.ref('citizens/' + id).remove();
+                setDialog({ isOpen: false });
+                showToast('Warga berhasil dihapus');
+            }
+        });
+    };
+
+    const handleDeleteTransaction = (id) => {
+        if(!isAdmin) return;
+        setDialog({
+            isOpen: true,
+            type: 'confirm',
+            title: 'Konfirmasi Hapus',
+            message: 'Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.',
+            confirmText: 'Ya, Hapus',
+            confirmStyle: 'bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700',
+            onConfirm: () => {
+                database.ref('transactions/' + id).remove();
+                setDialog({ isOpen: false });
+                showToast('Transaksi berhasil dihapus');
+            }
+        });
     };
 
     const handleSyncToSheets = () => {
         if(!isAdmin) return;
-        if(!window.confirm("Kirim seluruh data riwayat transaksi ini ke Google Sheets? (Data di file Sheets akan diperbarui)")) return;
         
-        setIsSyncing(true);
+        setDialog({
+            isOpen: true,
+            type: 'confirm',
+            title: 'Sinkronisasi Sheets',
+            message: 'Kirim seluruh riwayat transaksi ke Google Sheets? (Data di file Sheets akan diperbarui sepenuhnya).',
+            confirmText: 'Mulai Sinkronisasi',
+            confirmStyle: 'btn-emerald',
+            onConfirm: () => {
+                setDialog({ isOpen: false });
+                setIsSyncing(true);
 
-        const dataToSend = transactions.map(t => ({
-            date: t.date.split('T')[0],
-            ket: t.ket,
-            type: t.type === 'masuk' ? 'Pemasukan' : 'Pengeluaran',
-            cat: CATEGORIES[t.category]?.name || 'Lainnya',
-            method: t.method.toUpperCase(),
-            nom: t.nominal
-        }));
+                const dataToSend = transactions.map(t => ({
+                    date: t.date.split('T')[0],
+                    ket: t.ket,
+                    type: t.type === 'masuk' ? 'Pemasukan' : 'Pengeluaran',
+                    cat: CATEGORIES[t.category]?.name || 'Lainnya',
+                    method: t.method.toUpperCase(),
+                    nom: t.nominal
+                }));
 
-        fetch(GOOGLE_SHEET_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(dataToSend)
-        })
-        .then(() => {
-            alert("Selesai! Data berhasil dikirim ke Google Sheets.");
-            setIsSyncing(false);
-        })
-        .catch(err => {
-            alert("Terjadi kesalahan: " + err.message);
-            setIsSyncing(false);
+                fetch(GOOGLE_SHEET_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(dataToSend)
+                })
+                .then(() => {
+                    showToast("Selesai! Data berhasil dikirim ke Google Sheets.");
+                    setIsSyncing(false);
+                })
+                .catch(err => {
+                    showToast("Terjadi kesalahan: " + err.message, 'error');
+                    setIsSyncing(false);
+                });
+            }
         });
     };
 
@@ -713,7 +744,6 @@ function App() {
     const filteredTransactions = useMemo(() => {
         return transactions.filter(t => {
             const tDate = new Date(t.date);
-            
             const matchMonth = filterTransMonth === 'all' || tDate.getMonth() === parseInt(filterTransMonth);
             const matchYear = filterTransYear === 'all' || tDate.getFullYear() === parseInt(filterTransYear);
             const matchType = filterType === 'all' || t.type === filterType;
@@ -728,9 +758,16 @@ function App() {
         });
     }, [transactions, filterTransMonth, filterTransYear, filterType, filterCategory, filterMethod]);
 
-
     return ( 
-        <div className="max-w-md mx-auto h-screen flex flex-col relative"> 
+        <div className="max-w-md mx-auto h-screen flex flex-col relative overflow-hidden"> 
+            
+            {/* GLOBAL TOAST NOTIFICATION */}
+            {toast.show && (
+                <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-[100] px-5 py-3 rounded-2xl shadow-xl text-white font-bold text-xs flex items-center gap-2 toast-animate ${toast.type === 'error' ? 'bg-rose-500' : 'bg-emerald-500'}`}>
+                    <span className="text-base">{toast.type === 'error' ? '⚠️' : '✅'}</span>
+                    {toast.message}
+                </div>
+            )}
 
             {/* HEADER */}
             <header className="hero-gradient text-white px-4 py-3 shadow-2xl flex-none flex justify-between items-center sticky top-0 z-50 pt-safe"> 
@@ -762,7 +799,6 @@ function App() {
                 
                 {activeTab === 'home' && ( 
                     <div className="flex flex-col space-y-3"> 
-                        {/* Month/Year Selector */}
                         <div className="glass rounded-2xl p-3">
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="flex flex-col gap-1">
@@ -784,7 +820,6 @@ function App() {
                             </div>
                         </div>
 
-                        {/* Hero Card */}
                         <div className="hero-gradient rounded-3xl p-5 text-white shadow-2xl space-y-4 relative overflow-hidden"> 
                             <div className="relative z-10">
                                 <div className="flex items-center justify-between mb-1">
@@ -839,7 +874,6 @@ function App() {
                             </div>
                         </div> 
                         
-                        {/* Monthly Stats */}
                         <div className="grid grid-cols-2 gap-2"> 
                             <div className="premium-card p-3 rounded-2xl stat-card text-emerald-600">
                                 <div className="flex items-center gap-1.5 mb-1">
@@ -859,7 +893,6 @@ function App() {
                             </div> 
                         </div> 
                         
-                        {/* Categories */}
                         <div>
                             <div className="grid grid-cols-1 gap-2"> 
                                 {Object.entries(CATEGORIES).map(([k, cat]) => ( 
@@ -879,7 +912,6 @@ function App() {
                             </div> 
                         </div>
 
-                        {/* Recent Transactions */}
                         <div className="premium-card rounded-2xl overflow-hidden">
                             <div className="bg-gradient-to-r from-slate-50 to-white px-4 py-3 border-b border-slate-100 flex justify-between items-center">
                                 <div className="flex items-center gap-2">
@@ -922,13 +954,11 @@ function App() {
                                 </table>
                             </div>
                         </div>
-
                     </div> 
                 )}
 
                 {activeTab === 'warga' && ( 
                     <div className="flex flex-col space-y-3"> 
-                        {/* Month Navigator */}
                         <div className="glass rounded-2xl p-2 flex items-center gap-2"> 
                             <button onClick={() => { setActiveMonth(activeMonth === 0 ? 11 : activeMonth - 1); if(activeMonth === 0) setActiveYear(activeYear - 1); }} className="w-9 h-9 hover:bg-white rounded-xl text-sm font-bold flex items-center justify-center transition shadow-sm border border-slate-200">‹</button> 
                             <div className="font-bold text-sm flex-1 text-center text-slate-700 font-display">
@@ -943,7 +973,6 @@ function App() {
                             </button> 
                         )}
                         
-                        {/* Search & Filter */}
                         <div className="glass rounded-2xl p-2 flex gap-2">
                             <div className="flex-1 relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔍</span>
@@ -1036,7 +1065,6 @@ function App() {
                             </div>
                         )}
 
-                        {/* Filters */}
                         <div className="glass rounded-2xl p-3 space-y-2">
                             <div className="grid grid-cols-2 gap-2">
                                 <select value={filterTransMonth} onChange={(e) => setFilterTransMonth(e.target.value)} className="text-[10px] p-2 rounded-xl input-premium truncate font-medium text-slate-700">
@@ -1066,7 +1094,6 @@ function App() {
                             </div>
                         </div>
 
-                        {/* Summary */}
                         <div className="hero-gradient rounded-2xl p-3 shadow-lg flex justify-between items-center text-white relative overflow-hidden">
                             <div className="relative z-10">
                                 <span className="text-[10px] text-blue-200 uppercase tracking-wider font-bold">📊 {filteredTransactions.length} Transaksi</span>
@@ -1083,7 +1110,6 @@ function App() {
                             </div>
                         </div>
 
-                        {/* Transactions List */}
                         <div className="space-y-2">
                             {filteredTransactions.map(t => ( 
                                 <div key={t.id} className="trans-row p-3 rounded-2xl flex justify-between items-center"> 
@@ -1255,29 +1281,55 @@ function App() {
                 </div> 
             )}
 
-            {/* DELETE CONFIRMATION MODAL */}
-            {confirmDelete.isOpen && isAdmin && (
-                <div className="fixed inset-0 modal-backdrop z-[80] flex items-center justify-center p-4"> 
-                    <div className="modal-content p-6 rounded-3xl w-full max-w-xs text-center"> 
-                        <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center text-white text-2xl shadow-lg mb-3">⚠️</div>
-                        <h3 className="font-display font-bold text-lg text-slate-800">Konfirmasi Hapus</h3>
-                        <p className="text-xs text-slate-500 mt-2 mb-4">Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.</p>
-                        
-                        <div className="flex gap-2">
-                            <button 
-                                onClick={() => setConfirmDelete({ isOpen: false, id: null, type: null })} 
-                                className="flex-1 border border-slate-200 text-slate-600 p-3 rounded-xl text-xs font-bold hover:bg-slate-50 transition">
-                                Batal
-                            </button> 
-                            <button 
-                                onClick={executeDelete} 
-                                className="flex-1 bg-gradient-to-br from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white p-3 rounded-xl text-xs font-bold shadow-lg">
-                                Ya, Hapus
-                            </button> 
+            {/* UNIVERSAL CUSTOM MODAL (Pengganti prompt dan confirm) */}
+            {dialog.isOpen && (
+                <div className="fixed inset-0 modal-backdrop z-[90] flex items-center justify-center p-4"> 
+                    <div className="modal-content p-6 rounded-3xl w-full max-w-sm">
+                        <div className="text-center mb-4">
+                            <div className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg mb-3 ${dialog.type === 'confirm' ? 'bg-gradient-to-br from-rose-500 to-red-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'}`}>
+                                {dialog.type === 'confirm' ? '⚠️' : '📝'}
+                            </div>
+                            <h3 className="font-display font-bold text-lg text-slate-800">{dialog.title}</h3>
+                            {dialog.message && <p className="text-xs text-slate-500 mt-2">{dialog.message}</p>}
                         </div>
-                    </div> 
-                </div> 
+
+                        {dialog.type === 'prompt' ? (
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                const data = {};
+                                dialog.inputs.forEach(input => {
+                                    data[input.name] = e.target[input.name].value;
+                                });
+                                dialog.onConfirm(data);
+                            }}>
+                                <div className="space-y-3 mb-4">
+                                    {dialog.inputs.map((input, idx) => (
+                                        <div key={idx}>
+                                            <label className="text-[10px] font-bold text-slate-600 ml-1 uppercase tracking-wider">{input.label}</label>
+                                            <input 
+                                                name={input.name}
+                                                defaultValue={input.value} 
+                                                className="w-full mt-1 text-sm p-3 rounded-xl input-premium" 
+                                                required 
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => setDialog({ ...dialog, isOpen: false })} className="flex-1 border border-slate-200 text-slate-600 p-3 rounded-xl text-xs font-bold hover:bg-slate-50 transition">Batal</button> 
+                                    <button type="submit" className={`flex-1 text-white p-3 rounded-xl text-xs font-bold shadow-lg ${dialog.confirmStyle}`}>{dialog.confirmText}</button> 
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="flex gap-2">
+                                <button onClick={() => setDialog({ ...dialog, isOpen: false })} className="flex-1 border border-slate-200 text-slate-600 p-3 rounded-xl text-xs font-bold hover:bg-slate-50 transition">Batal</button> 
+                                <button onClick={() => dialog.onConfirm()} className={`flex-1 text-white p-3 rounded-xl text-xs font-bold shadow-lg ${dialog.confirmStyle}`}>{dialog.confirmText}</button> 
+                            </div>
+                        )}
+                    </div>
+                </div>
             )}
+            
         </div> 
     ); 
 }
