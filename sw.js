@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adelia-v2';
+const CACHE_NAME = 'adelia-v3';
 const urlsToCache = [
   './',
   './index.html',
