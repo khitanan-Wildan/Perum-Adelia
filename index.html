@@ -3,6 +3,14 @@
 <head> 
     <meta charset="UTF-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"> 
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0a0e27">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
     <title>PERUMAHAN ADELIA</title> 
     <script src="https://cdn.tailwindcss.com"></script> 
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script> 
@@ -393,12 +401,15 @@ function App() {
     const [showTransModal, setShowTransModal] = useState(false); 
     const [editTransData, setEditTransData] = useState(null); 
     
-    // CUSTOM TOAST & MODAL STATES (Pengganti alert, prompt, confirm)
+    // CUSTOM TOAST & MODAL STATES
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [dialog, setDialog] = useState({
         isOpen: false, type: 'confirm', title: '', message: '', 
         inputs: [], onConfirm: null, confirmText: 'Ya', confirmStyle: 'btn-primary'
     });
+
+    // PWA INSTALL STATE
+    const [deferredPrompt, setDeferredPrompt] = useState(null);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -412,6 +423,37 @@ function App() {
         const dd = String(today.getDate()).padStart(2, '0');
         return `${yyyy}-${mm}-${dd}`;
     }, []);
+
+    // PWA Setup & Service Worker Registration
+    useEffect(() => {
+        // Register SW
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker Registered'))
+                .catch(err => console.log('SW Registration failed', err));
+        }
+
+        // Catch Install Prompt
+        const handleBeforeInstallPrompt = (e) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    }, []);
+
+    const handleInstallApp = () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    showToast('Instalasi aplikasi dimulai...', 'success');
+                }
+                setDeferredPrompt(null);
+            });
+        }
+    };
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -778,7 +820,15 @@ function App() {
                 </div>
 
                 <div className="flex items-center gap-2 flex-none">
-                    <span className="text-[10px] glass-dark px-2.5 py-1 rounded-full font-mono flex items-center shadow-lg border border-white/10">
+                    
+                    {/* TOMBOL INSTALL PWA MUNCUL DI SINI */}
+                    {deferredPrompt && (
+                        <button onClick={handleInstallApp} className="text-[10px] bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-purple-600 hover:to-indigo-700 px-3 py-1.5 rounded-full font-bold shadow-lg border border-purple-400/30 transition-all flex items-center gap-1 mr-1">
+                            ⬇️ Install
+                        </button>
+                    )}
+
+                    <span className="text-[10px] glass-dark px-2.5 py-1 rounded-full font-mono flex items-center shadow-lg border border-white/10 hidden sm:flex">
                         <span className="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full mr-1.5 pulse-dot relative"></span>
                         <span className="text-white/90">{MONTH_NAMES[activeMonth].substring(0,3)} {activeYear}</span>
                     </span>
@@ -1281,7 +1331,7 @@ function App() {
                 </div> 
             )}
 
-            {/* UNIVERSAL CUSTOM MODAL (Pengganti prompt dan confirm) */}
+            {/* UNIVERSAL CUSTOM MODAL */}
             {dialog.isOpen && (
                 <div className="fixed inset-0 modal-backdrop z-[90] flex items-center justify-center p-4"> 
                     <div className="modal-content p-6 rounded-3xl w-full max-w-sm">
